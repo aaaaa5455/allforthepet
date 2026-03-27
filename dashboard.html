@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — ALL FOR THE PET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --surface3: #222222;
+    --white: #f5f2eb;
+    --cream: #ede9df;
+    --orange: #e8541e;
+    --orange-light: #f07344;
+    --orange-dim: rgba(232,84,30,0.12);
+    --gray: #7a7670;
+    --gray-dim: #444;
+    --border: rgba(255,255,255,0.07);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --yellow: #facc15;
+    --yellow-dim: rgba(250,204,21,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 50;
+  }
+  .sidebar-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--white);
+    padding: 0 28px 32px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    display: block;
+  }
+  .sidebar-logo span { color: var(--orange); }
+
+  .sidebar-section {
+    padding: 24px 20px 8px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray-dim);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    margin: 2px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { background: var(--orange-dim); color: var(--orange); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 20px 10px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .topbar-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar-date {
+    font-size: 13px;
+    color: var(--gray);
+  }
+  .badge-online {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+  .badge-online::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* CONTENT */
+  .content { padding: 36px 40px; flex: 1; }
+
+  /* DOG PROFILE */
+  .dog-profile {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  .dog-avatar-lg {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    flex-shrink: 0;
+  }
+  .dog-info h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .dog-info h2 span { color: var(--orange); }
+  .dog-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .dog-meta-item {
+    font-size: 13px;
+    color: var(--gray);
+  }
+  .dog-meta-item strong { color: var(--white); font-weight: 500; }
+  .dog-tags {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--gray);
+  }
+  .tag.orange { background: var(--orange-dim); color: var(--orange); }
+  .tag.green { background: var(--green-dim); color: var(--green); }
+  .dog-score {
+    margin-left: auto;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .score-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 4px solid var(--orange);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .score-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--orange);
+    line-height: 1;
+  }
+  .score-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; text-transform: uppercase; }
+  .score-desc { font-size: 12px; color: var(--gray); }
+
+  /* GRID */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .metric-card:hover { border-color: rgba(232,84,30,0.3); }
+  .metric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .metric-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .metric-icon.orange { background: var(--orange-dim); }
+  .metric-icon.green { background: var(--green-dim); }
+  .metric-icon.yellow { background: var(--yellow-dim); }
+  .metric-icon.red { background: var(--red-dim); }
+  .metric-trend {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .metric-trend.up { background: var(--green-dim); color: var(--green); }
+  .metric-trend.down { background: var(--red-dim); color: var(--red); }
+  .metric-trend.flat { background: var(--surface2); color: var(--gray); }
+  .metric-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-unit { font-size: 16px; color: var(--gray); }
+  .metric-name { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+  .metric-bar-bg {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .metric-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--orange);
+    transition: width 1s ease;
+  }
+  .metric-bar-fill.green { background: var(--green); }
+  .metric-bar-fill.yellow { background: var(--yellow); }
+  .metric-bar-fill.red { background: var(--red); }
+  .metric-subtext {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--gray-dim);
+  }
+
+  /* BOTTOM GRID */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* MEALS */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .panel-action {
+    font-size: 12px;
+    color: var(--orange);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  .meal-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .meal-icon {
+    width: 40px; height: 40px;
+    background: var(--surface2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .meal-info { flex: 1; }
+  .meal-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .meal-time { font-size: 12px; color: var(--gray); }
+  .meal-amount {
+    text-align: right;
+  }
+  .meal-cal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--orange);
+  }
+  .meal-g { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  .nutrition-bar-row {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .nutrition-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+  .nutrition-label-row strong { color: var(--white); font-weight: 500; }
+  .nutrition-track-bar {
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .nutrition-track-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+
+  /* AI SECTION */
+  .ai-panel {
+    grid-column: span 2;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 0;
+  }
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--orange-dim);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .ai-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .ai-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .ai-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .ai-card:hover { border-color: rgba(232,84,30,0.3); }
+  .ai-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .ai-card-icon { font-size: 24px; }
+  .ai-priority {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .ai-priority.high { background: var(--red-dim); color: var(--red); }
+  .ai-priority.medium { background: var(--yellow-dim); color: var(--yellow); }
+  .ai-priority.low { background: var(--green-dim); color: var(--green); }
+  .ai-card-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .ai-card-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+  .ai-card-action {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--orange);
+    font-weight: 500;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    padding: 0;
+  }
+
+  /* WEEKLY CHART */
+  .weekly-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100px;
+    margin-top: 20px;
+  }
+  .chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-bar-wrap {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--surface3);
+    transition: background 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .chart-bar.active { background: var(--orange); }
+  .chart-bar:not(.active):hover { background: var(--surface3); filter: brightness(1.4); }
+  .chart-day { font-size: 11px; color: var(--gray); }
+  .chart-day.active { color: var(--orange); font-weight: 500; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1200px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .ai-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .ai-panel { grid-column: span 1; }
+    .ai-grid { grid-template-columns: 1fr; }
+    .content { padding: 24px 20px; }
+    .topbar { padding: 16px 20px; }
+    .dog-profile { flex-wrap: wrap; }
+    .dog-score { margin-left: 0; }
+  }
+  @media (max-width: 600px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">ALL FOR <span>THE PET</span></a>
+
+  <div class="sidebar-section">Main</div>
+  <a href="#" class="nav-item active">
+    <span class="nav-icon">📊</span> Dashboard
+  </a>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">📈</span> Health Trends
+  </a>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">🗓</span> Appointments
+  </a>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">🍖</span> Nutrition
+  </a>
+
+  <div class="sidebar-section">Tools</div>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">🤖</span> AI Advisor
+  </a>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">🏥</span> Find a Vet
+  </a>
+  <a href="#" class="nav-item">
+    <span class="nav-icon">📋</span> Medical Records
+  </a>
+
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚙️</span> Settings
+    </a>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">←</span> Back to Home
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">HEALTH DASHBOARD</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="current-date"></div>
+      <div class="badge-online">Monitoring Active</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DOG PROFILE -->
+    <div class="dog-profile">
+      <div class="dog-avatar-lg">🐕</div>
+      <div class="dog-info">
+        <h2>MAX <span>·</span> GOLDEN RETRIEVER</h2>
+        <div class="dog-meta">
+          <div class="dog-meta-item">Age <strong>3 yrs</strong></div>
+          <div class="dog-meta-item">Weight <strong>28 kg</strong></div>
+          <div class="dog-meta-item">Sex <strong>Male (neutered)</strong></div>
+          <div class="dog-meta-item">Chip ID <strong>#4D2A9F3B</strong></div>
+          <div class="dog-meta-item">Last Vet Visit <strong>Dec 2024</strong></div>
+        </div>
+        <div class="dog-tags">
+          <span class="tag orange">ACTIVE</span>
+          <span class="tag green">VACCINATED</span>
+          <span class="tag">No Allergies</span>
+          <span class="tag">Indoor + Outdoor</span>
+        </div>
+      </div>
+      <div class="dog-score">
+        <div class="score-ring">
+          <div class="score-num">87</div>
+          <div class="score-label">/ 100</div>
+        </div>
+        <div class="score-desc">Health Score</div>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+      <!-- Steps -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon orange">🦶</div>
+          <span class="metric-trend up">↑ 12%</span>
+        </div>
+        <div class="metric-val">8,240<span class="metric-unit"> steps</span></div>
+        <div class="metric-name">Today's Steps</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill" style="width: 82%"></div>
+        </div>
+        <div class="metric-subtext">Goal: 10,000 steps &nbsp;·&nbsp; 82% complete</div>
+      </div>
+
+      <!-- Heart Rate -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon red">❤️</div>
+          <span class="metric-trend flat">Normal</span>
+        </div>
+        <div class="metric-val">82<span class="metric-unit"> bpm</span></div>
+        <div class="metric-name">Resting Heart Rate</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill green" style="width: 60%"></div>
+        </div>
+        <div class="metric-subtext">Normal range: 60–140 bpm</div>
+      </div>
+
+      <!-- Sleep -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon yellow">🌙</div>
+          <span class="metric-trend down">↓ 8%</span>
+        </div>
+        <div class="metric-val">6.5<span class="metric-unit"> hrs</span></div>
+        <div class="metric-name">Sleep Duration</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill yellow" style="width: 65%"></div>
+        </div>
+        <div class="metric-subtext">Recommended: 10–14 hrs for adult dogs</div>
+      </div>
+
+      <!-- Calories -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-icon green">🔥</div>
+          <span class="metric-trend up">↑ 5%</span>
+        </div>
+        <div class="metric-val">1,140<span class="metric-unit"> kcal</span></div>
+        <div class="metric-name">Calories Consumed</div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill green" style="width: 90%"></div>
+        </div>
+        <div class="metric-subtext">Daily target: 1,270 kcal &nbsp;·&nbsp; 90% complete</div>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid" style="gap:16px; margin-bottom:16px;">
+
+      <!-- Diet Log -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">DIET LOG</div>
+          <button class="panel-action">+ Add Meal</button>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-icon">🌅</div>
+          <div class="meal-info">
+            <div class="meal-name">Morning Kibble</div>
+            <div class="meal-time">07:30 AM &nbsp;·&nbsp; Royal Canin Adult</div>
+          </div>
+          <div class="meal-amount">
+            <div class="meal-cal">480 kcal</div>
+            <div class="meal-g">180 g</div>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-icon">🍖</div>
+          <div class="meal-info">
+            <div class="meal-name">Chicken Treat</div>
+            <div class="meal-time">12:15 PM &nbsp;·&nbsp; Snack</div>
+          </div>
+          <div class="meal-amount">
+            <div class="meal-cal">60 kcal</div>
+            <div class="meal-g">20 g</div>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-icon">🌆</div>
+          <div class="meal-info">
+            <div class="meal-name">Evening Kibble</div>
+            <div class="meal-time">06:00 PM &nbsp;·&nbsp; Royal Canin Adult</div>
+          </div>
+          <div class="meal-amount">
+            <div class="meal-cal">480 kcal</div>
+            <div class="meal-g">180 g</div>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-icon">💧</div>
+          <div class="meal-info">
+            <div class="meal-name">Water Intake</div>
+            <div class="meal-time">Throughout the day</div>
+          </div>
+          <div class="meal-amount">
+            <div class="meal-cal" style="color: var(--green);">600 ml</div>
+            <div class="meal-g">Goal: 700 ml</div>
+          </div>
+        </div>
+
+        <div class="nutrition-bar-row">
+          <div class="nutrition-label-row">
+            <span>Protein</span>
+            <strong>72%</strong>
+          </div>
+          <div class="nutrition-track-bar">
+            <div class="nutrition-track-fill" style="width:72%; background: var(--orange);"></div>
+          </div>
+          <div class="nutrition-label-row">
+            <span>Fat</span>
+            <strong>58%</strong>
+          </div>
+          <div class="nutrition-track-bar">
+            <div class="nutrition-track-fill" style="width:58%; background: var(--yellow);"></div>
+          </div>
+          <div class="nutrition-label-row">
+            <span>Carbs</span>
+            <strong>85%</strong>
+          </div>
+          <div class="nutrition-track-bar">
+            <div class="nutrition-track-fill" style="width:85%; background: var(--green);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Steps Chart -->
+      <div class="weekly-panel">
+        <div class="panel-header">
+          <div class="panel-title">WEEKLY ACTIVITY</div>
+          <button class="panel-action">View Full Report</button>
+        </div>
+        <div class="chart-bars">
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:55%;" title="Mon: 7,200 steps"></div>
+            </div>
+            <div class="chart-day">Mon</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:75%;" title="Tue: 9,800 steps"></div>
+            </div>
+            <div class="chart-day">Tue</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:45%;" title="Wed: 5,900 steps"></div>
+            </div>
+            <div class="chart-day">Wed</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:90%;" title="Thu: 11,400 steps"></div>
+            </div>
+            <div class="chart-day">Thu</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:60%;" title="Fri: 7,800 steps"></div>
+            </div>
+            <div class="chart-day">Fri</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:35%;" title="Sat: 4,600 steps"></div>
+            </div>
+            <div class="chart-day">Sat</div>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar active" style="height:68%;" title="Today: 8,240 steps"></div>
+            </div>
+            <div class="chart-day active">Today</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="background: var(--surface2); border-radius: 10px; padding: 14px 16px;">
+            <div style="font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Weekly Avg</div>
+            <div style="font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--white);">7,814 <span style="font-size:14px; color: var(--gray);">steps</span></div>
+          </div>
+          <div style="background: var(--surface2); border-radius: 10px; padding: 14px 16px;">
+            <div style="font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Best Day</div>
+            <div style="font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--orange);">11,400 <span style="font-size:14px; color: var(--gray);">Thu</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Health Suggestions -->
+      <div class="ai-panel">
+        <div class="ai-header">
+          <div class="panel-title ai-title">AI HEALTH ADVISOR</div>
+          <div class="ai-badge">🤖 Powered by AI</div>
+          <div style="margin-left: auto; font-size: 12px; color: var(--gray);">Updated just now</div>
+        </div>
+        <div class="ai-grid">
+
+          <div class="ai-card">
+            <div class="ai-card-top">
+              <div class="ai-card-icon">😴</div>
+              <div class="ai-priority medium">Medium</div>
+            </div>
+            <div class="ai-card-title">Sleep Below Target</div>
+            <div class="ai-card-desc">Max slept 6.5 hrs last night — below the 10–14 hr range for adult dogs. This is the 3rd consecutive short night. Consider reducing evening excitement before bedtime.</div>
+            <button class="ai-card-action">Learn more →</button>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-top">
+              <div class="ai-card-icon">💧</div>
+              <div class="ai-priority low">Good</div>
+            </div>
+            <div class="ai-card-title">Hydration On Track</div>
+            <div class="ai-card-desc">Water intake is at 86% of daily target. Heart rate and activity levels are within healthy range. Keep up the current routine — Max is doing great!</div>
+            <button class="ai-card-action">View details →</button>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-top">
+              <div class="ai-card-icon">📅</div>
+              <div class="ai-priority high">Action Needed</div>
+            </div>
+            <div class="ai-card-title">Vaccination Due Soon</div>
+            <div class="ai-card-desc">Max's annual booster (DHPP + Rabies) is due in 3 weeks. Scheduling early avoids gaps in coverage. We found 2 clinics with availability this week.</div>
+            <button class="ai-card-action">Book appointment →</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Set current date
+  const d = new Date();
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('current-date').textContent = d.toLocaleDateString('en-US', opts);
+
+  // Animate metric bars on load
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.metric-bar-fill, .nutrition-track-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      setTimeout(() => { bar.style.width = w; }, 100);
+    });
+  });
+</script>
+</body>
+</html>
