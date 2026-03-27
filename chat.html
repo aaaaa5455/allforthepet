@@ -489,7 +489,7 @@
         type="password"
         class="api-key-input"
         id="apiKeyInput"
-        placeholder="Gemini API Key"
+        placeholder="Groq API Key"
         autocomplete="off"
       >
       <button class="api-save-btn" onclick="saveApiKey()">Save</button>
@@ -503,7 +503,7 @@
       <div class="welcome-icon">🐾</div>
       <div class="welcome-title">ASK <span>DR. PAWSWORTH</span></div>
       <div class="welcome-desc">
-        Your AI veterinary advisor, powered by Gemini. Ask anything about your dog's health,
+        Your AI veterinary advisor, powered by Groq. Ask anything about your dog's health,
         symptoms, nutrition, or behaviour. Available 24/7.
       </div>
       <div class="suggestion-chips">
@@ -545,9 +545,9 @@
 
 <script>
   // ── State ────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY = 'aftp_gemini_key';
-  const MODEL = 'gemini-2.0-flash';
-  const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=';
+  const STORAGE_KEY = 'aftp_groq_key';
+  const MODEL = 'llama-3.3-70b-versatile';
+  const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
   const SYSTEM_PROMPT = `You are Dr. Pawsworth, a friendly and knowledgeable AI veterinary advisor for dogs.
 Your role is to:
 - Provide helpful, accurate general information about dog health, nutrition, behaviour, and care
@@ -575,7 +575,7 @@ Always end responses that involve potential health issues with a reminder to con
   function saveApiKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
     if (!key) { showToast('Please enter an API key.'); return; }
-    if (!key.startsWith('AIza')) { showToast('Invalid key format. Gemini keys start with AIza'); return; }
+    if (!key.startsWith('gsk_')) { showToast('Invalid key format. Groq keys start with gsk_'); return; }
     localStorage.setItem(STORAGE_KEY, key);
     updateApiStatus(true);
     showToast('✓ API key saved', true);
@@ -688,7 +688,7 @@ Always end responses that involve potential health issues with a reminder to con
 
     const apiKey = getApiKey();
     if (!apiKey) {
-      showToast('Please enter your Gemini API key above first.');
+      showToast('Please enter your Groq API key above first.');
       document.getElementById('apiKeyInput').focus();
       return;
     }
@@ -698,8 +698,8 @@ Always end responses that involve potential health issues with a reminder to con
     input.style.height = 'auto';
     setInputEnabled(false);
 
-    // Add user message to state and DOM  (Gemini role: "user" / "model")
-    messages.push({ role: 'user', parts: [{ text }] });
+    // Add user message to state and DOM
+    messages.push({ role: 'user', content: text });
     document.getElementById('chatArea').appendChild(createMessageEl('user', text));
 
     // Show typing indicator
@@ -708,13 +708,17 @@ Always end responses that involve potential health issues with a reminder to con
     scrollToBottom();
 
     try {
-      const response = await fetch(ENDPOINT + encodeURIComponent(apiKey), {
+      const response = await fetch(ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+        },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: messages,
-          generationConfig: { maxOutputTokens: 1024 },
+          model: MODEL,
+          messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+          max_tokens: 1024,
+          stream: true,
         }),
       });
 
@@ -731,7 +735,7 @@ Always end responses that involve potential health issues with a reminder to con
       document.getElementById('chatArea').appendChild(assistantEl);
       scrollToBottom();
 
-      // Stream SSE response
+      // Stream SSE response (OpenAI-compatible format)
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullText = '';
@@ -752,7 +756,7 @@ Always end responses that involve potential health issues with a reminder to con
 
           try {
             const parsed = JSON.parse(data);
-            const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            const chunk = parsed.choices?.[0]?.delta?.content;
             if (chunk) {
               fullText += chunk;
               bubble.innerHTML = formatMessage(fullText);
@@ -762,14 +766,14 @@ Always end responses that involve potential health issues with a reminder to con
         }
       }
 
-      messages.push({ role: 'model', parts: [{ text: fullText }] });
+      messages.push({ role: 'assistant', content: fullText });
 
     } catch (err) {
       typingEl.remove();
       let msg = err.message || 'Unknown error';
-      if (msg.includes('400') || msg.includes('API key')) msg = 'Invalid API key. Please check your key.';
+      if (msg.includes('401') || msg.includes('Invalid API Key')) msg = 'Invalid API key. Please check your Groq key.';
       else if (msg.includes('429')) msg = 'Rate limit reached. Please wait a moment and try again.';
-      else if (msg.includes('503') || msg.includes('overloaded')) msg = 'Gemini is currently busy. Please try again shortly.';
+      else if (msg.includes('503') || msg.includes('overloaded')) msg = 'Groq is currently busy. Please try again shortly.';
       showToast('Error: ' + msg);
       // Remove last user message from state so they can retry
       messages.pop();
