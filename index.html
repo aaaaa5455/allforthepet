@@ -454,7 +454,7 @@
     <p class="hero-desc">Connect your dog's health data, find the right vet, and get AI-powered insights — all in one place. Because your dog can't tell you what's wrong.</p>
     <div class="hero-form">
       <input type="email" id="waitlist" placeholder="Enter your email">
-      <button onclick="handleSignup()">Get Early Access</button>
+      <button onclick="submitEmail('waitlist', this)">Get Early Access</button>
     </div>
     <p class="hero-note">Free to join. No credit card required.</p>
   </div>
@@ -574,7 +574,7 @@
   <p class="cta-desc">Join thousands of dog owners who are taking health seriously.</p>
   <div class="cta-form">
     <input type="email" id="waitlist2" placeholder="Your email address">
-    <button onclick="handleSignup2()">Join Free →</button>
+    <button onclick="submitEmail('waitlist2', this)">Join Free →</button>
   </div>
 </section>
 
@@ -584,22 +584,29 @@
 </footer>
 
 <script>
-  function handleSignup() {
-    const email = document.getElementById('waitlist').value;
-    if (email && email.includes('@')) {
-      alert('You\'re on the list! We\'ll be in touch soon. 🐾');
-      document.getElementById('waitlist').value = '';
-    } else {
+  async function submitEmail(inputId, btnEl) {
+    const email = document.getElementById(inputId).value;
+    if (!email || !email.includes('@')) {
       alert('Please enter a valid email.');
+      return;
     }
-  }
-  function handleSignup2() {
-    const email = document.getElementById('waitlist2').value;
-    if (email && email.includes('@')) {
-      alert('You\'re on the list! We\'ll be in touch soon. 🐾');
-      document.getElementById('waitlist2').value = '';
-    } else {
-      alert('Please enter a valid email.');
+    btnEl.disabled = true;
+    try {
+      const res = await fetch('https://formspree.io/f/xkopgkqk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        alert('Thanks! We\'ll be in touch soon 🐾');
+        document.getElementById(inputId).value = '';
+      } else {
+        alert('Something went wrong, please try again.');
+      }
+    } catch {
+      alert('Something went wrong, please try again.');
+    } finally {
+      btnEl.disabled = false;
     }
   }
 
