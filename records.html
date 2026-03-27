@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medical Records — ALL FOR THE PET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a; --surface: #111111; --surface2: #1a1a1a; --surface3: #222222;
+    --white: #f5f2eb; --orange: #e8541e; --orange-light: #f07344;
+    --orange-dim: rgba(232,84,30,0.12); --gray: #7a7670; --gray-dim: #444;
+    --border: rgba(255,255,255,0.07);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.12);
+    --yellow: #facc15; --yellow-dim: rgba(250,204,21,0.12);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 400; min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: 240px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 32px 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--white); padding: 0 28px 32px; border-bottom: 1px solid var(--border); text-decoration: none; display: block; }
+  .sidebar-logo span { color: var(--orange); }
+  .sidebar-section { padding: 24px 20px 8px; font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--gray-dim); }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; margin: 2px 10px; border-radius: 8px; font-size: 14px; color: var(--gray); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { background: var(--orange-dim); color: var(--orange); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-bottom { margin-top: auto; padding: 20px 10px 0; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+  .topbar-right { display: flex; gap: 10px; }
+  .btn-sm { padding: 8px 18px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: background 0.2s; }
+  .btn-primary { background: var(--orange); color: var(--white); }
+  .btn-primary:hover { background: var(--orange-light); }
+  .btn-secondary { background: var(--surface2); color: var(--gray); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--surface3); color: var(--white); }
+  .content { padding: 36px 40px; flex: 1; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  .tab { padding: 12px 24px; font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; }
+  .tab:hover { color: var(--white); }
+  .tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* TIMELINE (visits) */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:2px; background:var(--border); }
+  .visit-item { position: relative; margin-bottom: 24px; }
+  .visit-dot { position: absolute; left: -26px; top: 20px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--surface); flex-shrink: 0; }
+  .visit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; transition: border-color 0.2s; cursor: pointer; }
+  .visit-card:hover { border-color: rgba(232,84,30,0.3); }
+  .visit-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 16px; }
+  .visit-date { font-size: 12px; color: var(--gray); }
+  .visit-title { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
+  .visit-clinic { font-size: 13px; color: var(--gray); }
+  .visit-badge { font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px; flex-shrink: 0; }
+  .badge-routine { background: var(--green-dim); color: var(--green); }
+  .badge-checkup { background: var(--blue-dim); color: var(--blue); }
+  .badge-urgent  { background: var(--red-dim); color: var(--red); }
+  .badge-surgery { background: var(--yellow-dim); color: var(--yellow); }
+  .visit-notes { font-size: 13px; color: var(--gray); line-height: 1.7; margin-bottom: 14px; }
+  .visit-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .visit-meta-item { font-size: 12px; color: var(--gray-dim); display: flex; align-items: center; gap: 4px; }
+  .visit-meta-item strong { color: var(--gray); }
+
+  /* VACCINE TABLE */
+  .vax-table { width: 100%; border-collapse: collapse; }
+  .vax-table th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); border-bottom: 1px solid var(--border); }
+  .vax-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .vax-table tr:last-child td { border-bottom: none; }
+  .vax-table tr:hover td { background: var(--surface2); }
+  .status-pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
+  .status-current  { background: var(--green-dim); color: var(--green); }
+  .status-due      { background: var(--yellow-dim); color: var(--yellow); }
+  .status-overdue  { background: var(--red-dim); color: var(--red); }
+
+  /* MEDICATION TABLE */
+  .med-list { display: flex; flex-direction: column; gap: 14px; }
+  .med-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; display: flex; align-items: center; gap: 20px; }
+  .med-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .med-info { flex: 1; }
+  .med-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .med-detail { font-size: 13px; color: var(--gray); }
+  .med-right { text-align: right; flex-shrink: 0; }
+  .med-status { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+  .med-next { font-size: 12px; color: var(--gray); }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .stat-mini-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; margin-bottom: 4px; }
+  .stat-mini-label { font-size: 12px; color: var(--gray); }
+
+  @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 16px 20px; flex-wrap: wrap; } .stats-row { grid-template-columns: 1fr 1fr; } .med-card { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">ALL FOR <span>THE PET</span></a>
+  <div class="sidebar-section">Main</div>
+  <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+  <a href="trends.html" class="nav-item"><span class="nav-icon">📈</span> Health Trends</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓</span> Appointments</a>
+  <a href="nutrition.html" class="nav-item"><span class="nav-icon">🍖</span> Nutrition</a>
+  <div class="sidebar-section">Tools</div>
+  <a href="chat.html" class="nav-item"><span class="nav-icon">🤖</span> AI Advisor</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🏥</span> Find a Vet</a>
+  <a href="records.html" class="nav-item active"><span class="nav-icon">📋</span> Medical Records</a>
+  <div class="sidebar-bottom">
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">←</span> Back to Home</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">MEDICAL RECORDS — MAX</div>
+    <div class="topbar-right">
+      <button class="btn-sm btn-secondary">⬇ Export PDF</button>
+      <button class="btn-sm btn-primary" onclick="window.location.href='appointments.html'">+ Book Appointment</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-num" style="color:var(--orange)">8</div>
+        <div class="stat-mini-label">Total Vet Visits</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-num" style="color:var(--green)">6/7</div>
+        <div class="stat-mini-label">Vaccines Up to Date</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-num" style="color:var(--blue)">2</div>
+        <div class="stat-mini-label">Active Medications</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-num" style="color:var(--yellow)">1</div>
+        <div class="stat-mini-label">Due This Month</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('visits', this)">🏥 Visit History</div>
+      <div class="tab" onclick="showTab('vaccines', this)">💉 Vaccinations</div>
+      <div class="tab" onclick="showTab('meds', this)">💊 Medications</div>
+    </div>
+
+    <!-- VISIT HISTORY -->
+    <div class="tab-panel active" id="tab-visits">
+      <div class="timeline">
+
+        <div class="visit-item">
+          <div class="visit-dot" style="background:var(--blue)"></div>
+          <div class="visit-card">
+            <div class="visit-top">
+              <div>
+                <div class="visit-date">December 14, 2024</div>
+                <div class="visit-title">Annual Health Checkup</div>
+                <div class="visit-clinic">🏥 Paws & Care Animal Hospital · Dr. Chen</div>
+              </div>
+              <span class="visit-badge badge-checkup">Check-up</span>
+            </div>
+            <div class="visit-notes">Full physical examination completed. Weight: 28 kg (stable). Heart, lungs, and joints all normal. Dental health good with minor tartar build-up noted — recommended dental clean in 6 months. Blood panel results within normal range. DHPP booster administered.</div>
+            <div class="visit-meta">
+              <div class="visit-meta-item">⚖️ Weight: <strong>28 kg</strong></div>
+              <div class="visit-meta-item">💊 Prescribed: <strong>None</strong></div>
+              <div class="visit-meta-item">📅 Next visit: <strong>Dec 2025</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="visit-item">
+          <div class="visit-dot" style="background:var(--red)"></div>
+          <div class="visit-card">
+            <div class="visit-top">
+              <div>
+                <div class="visit-date">September 3, 2024</div>
+                <div class="visit-title">Skin Irritation — Urgent Visit</div>
+                <div class="visit-clinic">🏥 Happy Paws Veterinary Clinic · Dr. Lin</div>
+              </div>
+              <span class="visit-badge badge-urgent">Urgent</span>
+            </div>
+            <div class="visit-notes">Max presented with excessive scratching on the belly and inner thighs, mild redness noted. Skin scraping performed — no mites detected. Likely seasonal environmental allergy. Prescribed antihistamine (Cetirizine) for 14 days and hypoallergenic shampoo. Follow-up recommended in 3 weeks.</div>
+            <div class="visit-meta">
+              <div class="visit-meta-item">⚖️ Weight: <strong>27.8 kg</strong></div>
+              <div class="visit-meta-item">💊 Prescribed: <strong>Cetirizine 10mg</strong></div>
+              <div class="visit-meta-item">📅 Follow-up: <strong>Sep 24, 2024 ✓</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="visit-item">
+          <div class="visit-dot" style="background:var(--green)"></div>
+          <div class="visit-card">
+            <div class="visit-top">
+              <div>
+                <div class="visit-date">May 20, 2024</div>
+                <div class="visit-title">Routine Vaccination</div>
+                <div class="visit-clinic">🏥 Paws & Care Animal Hospital · Dr. Chen</div>
+              </div>
+              <span class="visit-badge badge-routine">Routine</span>
+            </div>
+            <div class="visit-notes">Rabies annual booster administered. Max was calm during the visit. No adverse reactions observed. Heartworm preventive (Heartgard Plus) renewed for 6-month supply.</div>
+            <div class="visit-meta">
+              <div class="visit-meta-item">⚖️ Weight: <strong>27.5 kg</strong></div>
+              <div class="visit-meta-item">💉 Vaccine: <strong>Rabies booster</strong></div>
+              <div class="visit-meta-item">📅 Next Rabies: <strong>May 2025</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="visit-item">
+          <div class="visit-dot" style="background:var(--yellow)"></div>
+          <div class="visit-card">
+            <div class="visit-top">
+              <div>
+                <div class="visit-date">November 10, 2023</div>
+                <div class="visit-title">Spay / Neuter Surgery</div>
+                <div class="visit-clinic">🏥 Taipei Pet Medical Center · Dr. Wu</div>
+              </div>
+              <span class="visit-badge badge-surgery">Surgery</span>
+            </div>
+            <div class="visit-notes">Elective neutering procedure performed under general anaesthesia. Surgery was uneventful, recovery excellent. Discharged same day with post-op care instructions. Pain management: Meloxicam for 5 days. Stitches removed Nov 24, 2023 — healed well.</div>
+            <div class="visit-meta">
+              <div class="visit-meta-item">⚖️ Weight: <strong>26.2 kg</strong></div>
+              <div class="visit-meta-item">💊 Prescribed: <strong>Meloxicam 5 days</strong></div>
+              <div class="visit-meta-item">📅 Recovery: <strong>Complete ✓</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="visit-item">
+          <div class="visit-dot" style="background:var(--blue)"></div>
+          <div class="visit-card">
+            <div class="visit-top">
+              <div>
+                <div class="visit-date">March 5, 2023</div>
+                <div class="visit-title">First Annual Checkup</div>
+                <div class="visit-clinic">🏥 Paws & Care Animal Hospital · Dr. Chen</div>
+              </div>
+              <span class="visit-badge badge-checkup">Check-up</span>
+            </div>
+            <div class="visit-notes">First full checkup at 1 year old. All development milestones met. Microchip registered. DHPP, Bordetella, and Leptospirosis vaccines administered. Dental health excellent. Recommended transition to adult dog food.</div>
+            <div class="visit-meta">
+              <div class="visit-meta-item">⚖️ Weight: <strong>24.0 kg</strong></div>
+              <div class="visit-meta-item">💉 Vaccines: <strong>DHPP + Bordetella + Lepto</strong></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VACCINATIONS -->
+    <div class="tab-panel" id="tab-vaccines">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <table class="vax-table">
+          <thead>
+            <tr>
+              <th>Vaccine</th>
+              <th>Last Given</th>
+              <th>Next Due</th>
+              <th>Administered By</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>DHPP (Distemper, Hepatitis, Parvovirus, Parainfluenza)</strong></td>
+              <td style="color:var(--gray)">Dec 14, 2024</td>
+              <td style="color:var(--gray)">Dec 2025</td>
+              <td style="color:var(--gray)">Dr. Chen</td>
+              <td><span class="status-pill status-current">Current ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Rabies</strong></td>
+              <td style="color:var(--gray)">May 20, 2024</td>
+              <td style="color:var(--yellow)">May 2025</td>
+              <td style="color:var(--gray)">Dr. Chen</td>
+              <td><span class="status-pill status-due">Due Soon</span></td>
+            </tr>
+            <tr>
+              <td><strong>Bordetella (Kennel Cough)</strong></td>
+              <td style="color:var(--gray)">Mar 5, 2023</td>
+              <td style="color:var(--gray)">Mar 2025</td>
+              <td style="color:var(--gray)">Dr. Chen</td>
+              <td><span class="status-pill status-current">Current ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Leptospirosis</strong></td>
+              <td style="color:var(--gray)">Mar 5, 2023</td>
+              <td style="color:var(--gray)">Mar 2025</td>
+              <td style="color:var(--gray)">Dr. Chen</td>
+              <td><span class="status-pill status-current">Current ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Lyme Disease</strong></td>
+              <td style="color:var(--gray)">Jan 12, 2024</td>
+              <td style="color:var(--gray)">Jan 2025</td>
+              <td style="color:var(--gray)">Dr. Lin</td>
+              <td><span class="status-pill status-current">Current ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Canine Influenza (H3N2)</strong></td>
+              <td style="color:var(--gray)">Jan 12, 2024</td>
+              <td style="color:var(--gray)">Jan 2025</td>
+              <td style="color:var(--gray)">Dr. Lin</td>
+              <td><span class="status-pill status-current">Current ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Canine Coronavirus</strong></td>
+              <td style="color:var(--gray)">—</td>
+              <td style="color:var(--red)">Not yet given</td>
+              <td style="color:var(--gray)">—</td>
+              <td><span class="status-pill status-overdue">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;background:var(--yellow-dim);border:1px solid rgba(250,204,21,0.2);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--yellow);">
+        ⚠️ Rabies booster is due in May 2025. <a href="appointments.html" style="color:var(--orange);text-decoration:none;font-weight:500">Book appointment →</a>
+      </div>
+    </div>
+
+    <!-- MEDICATIONS -->
+    <div class="tab-panel" id="tab-meds">
+      <div style="margin-bottom:20px;font-size:14px;color:var(--gray);">2 active medications · Last updated Dec 14, 2024</div>
+      <div class="med-list">
+
+        <div class="med-card">
+          <div class="med-icon" style="background:var(--green-dim)">💊</div>
+          <div class="med-info">
+            <div class="med-name">Heartgard Plus (Ivermectin + Pyrantel)</div>
+            <div class="med-detail">Heartworm & intestinal worm prevention · 1 chewable tablet per month · 28 kg dose</div>
+          </div>
+          <div class="med-right">
+            <div class="med-status" style="color:var(--green)">✓ Active</div>
+            <div class="med-next">Next dose: Jan 15, 2025</div>
+          </div>
+        </div>
+
+        <div class="med-card">
+          <div class="med-icon" style="background:var(--orange-dim)">🧴</div>
+          <div class="med-info">
+            <div class="med-name">NexGard (Afoxolaner)</div>
+            <div class="med-detail">Flea & tick prevention · 1 chewable tablet per month · 25–50 kg dose</div>
+          </div>
+          <div class="med-right">
+            <div class="med-status" style="color:var(--green)">✓ Active</div>
+            <div class="med-next">Next dose: Jan 20, 2025</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:16px;">PAST MEDICATIONS</div>
+          <div class="med-list">
+            <div class="med-card" style="opacity:0.6">
+              <div class="med-icon" style="background:var(--blue-dim)">💉</div>
+              <div class="med-info">
+                <div class="med-name">Cetirizine 10mg</div>
+                <div class="med-detail">Antihistamine for skin allergy · 1 tablet daily · 14-day course</div>
+              </div>
+              <div class="med-right">
+                <div class="med-status" style="color:var(--gray)">Completed</div>
+                <div class="med-next">Sep 3 – Sep 17, 2024</div>
+              </div>
+            </div>
+            <div class="med-card" style="opacity:0.6">
+              <div class="med-icon" style="background:var(--yellow-dim)">💊</div>
+              <div class="med-info">
+                <div class="med-name">Meloxicam 5mg</div>
+                <div class="med-detail">NSAID pain relief post-surgery · 1 tablet daily with food · 5-day course</div>
+              </div>
+              <div class="med-right">
+                <div class="med-status" style="color:var(--gray)">Completed</div>
+                <div class="med-next">Nov 10 – Nov 15, 2023</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showTab(id, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+  }
+</script>
+</body>
+</html>

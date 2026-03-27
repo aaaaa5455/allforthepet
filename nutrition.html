@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutrition — ALL FOR THE PET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a; --surface: #111111; --surface2: #1a1a1a; --surface3: #222222;
+    --white: #f5f2eb; --orange: #e8541e; --orange-light: #f07344;
+    --orange-dim: rgba(232,84,30,0.12); --gray: #7a7670; --gray-dim: #444;
+    --border: rgba(255,255,255,0.07);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.12);
+    --yellow: #facc15; --yellow-dim: rgba(250,204,21,0.12);
+    --red: #f87171;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 400; min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: 240px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 32px 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--white); padding: 0 28px 32px; border-bottom: 1px solid var(--border); text-decoration: none; display: block; }
+  .sidebar-logo span { color: var(--orange); }
+  .sidebar-section { padding: 24px 20px 8px; font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--gray-dim); }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; margin: 2px 10px; border-radius: 8px; font-size: 14px; color: var(--gray); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { background: var(--orange-dim); color: var(--orange); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-bottom { margin-top: auto; padding: 20px 10px 0; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+  .topbar-badge { background: var(--green-dim); color: var(--green); font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 20px; }
+  .content { padding: 36px 40px; flex: 1; }
+
+  /* CALORIE HERO */
+  .calorie-hero { display: flex; gap: 24px; margin-bottom: 28px; align-items: stretch; }
+  .calorie-ring-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; min-width: 240px; }
+  .ring-wrap { position: relative; width: 160px; height: 160px; margin-bottom: 16px; }
+  .ring-svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+  .ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .ring-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--orange); line-height: 1; }
+  .ring-unit { font-size: 11px; color: var(--gray); letter-spacing: 1px; text-transform: uppercase; }
+  .ring-label { font-size: 13px; color: var(--gray); text-align: center; }
+  .ring-sub { font-size: 12px; color: var(--gray-dim); margin-top: 4px; text-align: center; }
+
+  .macro-panel { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+  .macro-header { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+
+  .macro-item {}
+  .macro-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .macro-name { font-size: 14px; font-weight: 500; }
+  .macro-vals { font-size: 13px; color: var(--gray); }
+  .macro-vals strong { color: var(--white); }
+  .macro-bar-bg { height: 8px; background: var(--surface3); border-radius: 4px; overflow: hidden; }
+  .macro-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .macro-note { font-size: 11px; color: var(--gray-dim); margin-top: 5px; }
+
+  /* MEAL LOG */
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 16px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+  .panel-btn { font-size: 12px; color: var(--orange); background: none; border: none; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+
+  .meal-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .meal-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .meal-ico { width: 38px; height: 38px; background: var(--surface2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .meal-info { flex: 1; }
+  .meal-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .meal-time { font-size: 12px; color: var(--gray); }
+  .meal-cal { text-align: right; }
+  .meal-kcal { font-size: 14px; font-weight: 500; color: var(--orange); }
+  .meal-g { font-size: 12px; color: var(--gray); }
+
+  /* FOOD RECOMMENDATIONS */
+  .food-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .food-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: border-color 0.2s; }
+  .food-card:hover { border-color: rgba(232,84,30,0.3); }
+  .food-emoji { font-size: 36px; margin-bottom: 12px; }
+  .food-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .food-desc { font-size: 13px; color: var(--gray); line-height: 1.6; margin-bottom: 12px; }
+  .food-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .food-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+  .food-badge.good { background: var(--green-dim); color: var(--green); }
+  .food-badge.warn { background: var(--yellow-dim); color: var(--yellow); }
+  .food-badge.avoid { background: rgba(248,113,113,0.12); color: var(--red); }
+
+  /* AVOID LIST */
+  .avoid-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .avoid-card { background: var(--surface); border: 1px solid rgba(248,113,113,0.15); border-radius: 12px; padding: 16px; text-align: center; }
+  .avoid-emoji { font-size: 28px; margin-bottom: 8px; }
+  .avoid-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; color: var(--red); }
+  .avoid-reason { font-size: 11px; color: var(--gray); line-height: 1.5; }
+
+  @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 16px 20px; } .two-col { grid-template-columns: 1fr; } .food-grid { grid-template-columns: 1fr 1fr; } .avoid-grid { grid-template-columns: 1fr 1fr; } .calorie-hero { flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">ALL FOR <span>THE PET</span></a>
+  <div class="sidebar-section">Main</div>
+  <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+  <a href="trends.html" class="nav-item"><span class="nav-icon">📈</span> Health Trends</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓</span> Appointments</a>
+  <a href="nutrition.html" class="nav-item active"><span class="nav-icon">🍖</span> Nutrition</a>
+  <div class="sidebar-section">Tools</div>
+  <a href="chat.html" class="nav-item"><span class="nav-icon">🤖</span> AI Advisor</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🏥</span> Find a Vet</a>
+  <a href="records.html" class="nav-item"><span class="nav-icon">📋</span> Medical Records</a>
+  <div class="sidebar-bottom">
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">←</span> Back to Home</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">NUTRITION — MAX</div>
+    <div class="topbar-badge">✓ On Track Today</div>
+  </header>
+
+  <div class="content">
+
+    <!-- Calorie + Macros -->
+    <div class="calorie-hero">
+      <div class="calorie-ring-panel">
+        <div class="ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="68" fill="none" stroke="#1a1a1a" stroke-width="14"/>
+            <circle cx="80" cy="80" r="68" fill="none" stroke="#e8541e" stroke-width="14"
+              stroke-dasharray="427 427" stroke-dashoffset="43" stroke-linecap="round"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num">1,140</div>
+            <div class="ring-unit">kcal</div>
+          </div>
+        </div>
+        <div class="ring-label">of 1,270 kcal daily goal</div>
+        <div class="ring-sub">130 kcal remaining</div>
+      </div>
+
+      <div class="macro-panel">
+        <div class="macro-header">TODAY'S MACRONUTRIENTS</div>
+
+        <div class="macro-item">
+          <div class="macro-top">
+            <div class="macro-name">🥩 Protein</div>
+            <div class="macro-vals"><strong>62g</strong> / 85g</div>
+          </div>
+          <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:73%;background:#e8541e"></div></div>
+          <div class="macro-note">73% — Add one more protein serving at dinner</div>
+        </div>
+
+        <div class="macro-item">
+          <div class="macro-top">
+            <div class="macro-name">🧈 Fat</div>
+            <div class="macro-vals"><strong>28g</strong> / 38g</div>
+          </div>
+          <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:74%;background:#facc15"></div></div>
+          <div class="macro-note">74% — Healthy fats support skin and coat health</div>
+        </div>
+
+        <div class="macro-item">
+          <div class="macro-top">
+            <div class="macro-name">🌾 Carbohydrates</div>
+            <div class="macro-vals"><strong>95g</strong> / 110g</div>
+          </div>
+          <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:86%;background:#4ade80"></div></div>
+          <div class="macro-note">86% — Great balance for energy levels</div>
+        </div>
+
+        <div class="macro-item">
+          <div class="macro-top">
+            <div class="macro-name">💧 Water</div>
+            <div class="macro-vals"><strong>600ml</strong> / 700ml</div>
+          </div>
+          <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:86%;background:#60a5fa"></div></div>
+          <div class="macro-note">86% — Keep the water bowl full and fresh</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meal Log + Weekly -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">TODAY'S MEALS</div>
+          <button class="panel-btn">+ Log Meal</button>
+        </div>
+        <div class="meal-row">
+          <div class="meal-ico">🌅</div>
+          <div class="meal-info"><div class="meal-name">Morning Kibble</div><div class="meal-time">7:30 AM · Royal Canin Adult</div></div>
+          <div class="meal-cal"><div class="meal-kcal">480 kcal</div><div class="meal-g">180 g</div></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-ico">🍖</div>
+          <div class="meal-info"><div class="meal-name">Chicken Treat</div><div class="meal-time">12:15 PM · Snack</div></div>
+          <div class="meal-cal"><div class="meal-kcal">60 kcal</div><div class="meal-g">20 g</div></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-ico">🥕</div>
+          <div class="meal-info"><div class="meal-name">Baby Carrot</div><div class="meal-time">3:00 PM · Snack</div></div>
+          <div class="meal-cal"><div class="meal-kcal">20 kcal</div><div class="meal-g">30 g</div></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-ico">🌆</div>
+          <div class="meal-info"><div class="meal-name">Evening Kibble</div><div class="meal-time">6:00 PM · Royal Canin Adult</div></div>
+          <div class="meal-cal"><div class="meal-kcal">480 kcal</div><div class="meal-g">180 g</div></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-ico">💧</div>
+          <div class="meal-info"><div class="meal-name">Water</div><div class="meal-time">Throughout the day</div></div>
+          <div class="meal-cal"><div class="meal-kcal" style="color:var(--blue)">600 ml</div><div class="meal-g">Goal: 700 ml</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">WEEKLY CALORIE INTAKE</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <!-- Simple bar chart -->
+          <script>
+            const weekData = [
+              {day:'Mon', val:1240, target:1270},
+              {day:'Tue', val:1310, target:1270},
+              {day:'Wed', val:1180, target:1270},
+              {day:'Thu', val:1270, target:1270},
+              {day:'Fri', val:1200, target:1270},
+              {day:'Sat', val:1350, target:1270},
+              {day:'Today', val:1140, target:1270},
+            ];
+          </script>
+          <div id="weeklyBars"></div>
+        </div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:16px;">
+          <div>
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Weekly Avg</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px">1,242 <span style="font-size:13px;color:var(--gray)">kcal</span></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Goal</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--orange)">1,270 <span style="font-size:13px;color:var(--gray)">kcal</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Recommended Foods -->
+    <div class="section-title">AI RECOMMENDED FOODS FOR MAX</div>
+    <div class="food-grid">
+      <div class="food-card">
+        <div class="food-emoji">🍗</div>
+        <div class="food-name">Boiled Chicken Breast</div>
+        <div class="food-desc">Lean, high-quality protein ideal for Golden Retrievers. Easy to digest, great for muscle maintenance. Best served plain without seasoning.</div>
+        <div class="food-badges">
+          <span class="food-badge good">High Protein</span>
+          <span class="food-badge good">Low Fat</span>
+        </div>
+      </div>
+      <div class="food-card">
+        <div class="food-emoji">🐟</div>
+        <div class="food-name">Salmon (Cooked)</div>
+        <div class="food-desc">Rich in omega-3 fatty acids, excellent for coat health and anti-inflammation. Max's slightly dull coat could benefit from weekly salmon.</div>
+        <div class="food-badges">
+          <span class="food-badge good">Omega-3</span>
+          <span class="food-badge good">Coat Health</span>
+        </div>
+      </div>
+      <div class="food-card">
+        <div class="food-emoji">🥦</div>
+        <div class="food-name">Steamed Broccoli</div>
+        <div class="food-desc">Good source of fibre, vitamins C and K. Serve in small amounts as a treat. Supports immune system and digestion.</div>
+        <div class="food-badges">
+          <span class="food-badge good">Fibre</span>
+          <span class="food-badge warn">Small amounts only</span>
+        </div>
+      </div>
+      <div class="food-card">
+        <div class="food-emoji">🥕</div>
+        <div class="food-name">Raw Carrots</div>
+        <div class="food-desc">Low-calorie, crunchy snack that's great for dental health. High in beta-carotene and fibre. Max loves them as a treat.</div>
+        <div class="food-badges">
+          <span class="food-badge good">Dental Health</span>
+          <span class="food-badge good">Low Calorie</span>
+        </div>
+      </div>
+      <div class="food-card">
+        <div class="food-emoji">🍠</div>
+        <div class="food-name">Sweet Potato (Cooked)</div>
+        <div class="food-desc">Excellent complex carbohydrate with beta-carotene, fibre and vitamins B6. Supports digestion and provides sustained energy for active dogs.</div>
+        <div class="food-badges">
+          <span class="food-badge good">Complex Carbs</span>
+          <span class="food-badge good">Vitamin A</span>
+        </div>
+      </div>
+      <div class="food-card">
+        <div class="food-emoji">🫐</div>
+        <div class="food-name">Blueberries</div>
+        <div class="food-desc">Antioxidant-rich superfood for dogs. Great as occasional treats (5–10 per day). Supports brain health and reduces inflammation.</div>
+        <div class="food-badges">
+          <span class="food-badge good">Antioxidants</span>
+          <span class="food-badge warn">Treat only</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Foods to Avoid -->
+    <div class="section-title">⚠️ FOODS TO AVOID</div>
+    <div class="avoid-grid">
+      <div class="avoid-card">
+        <div class="avoid-emoji">🍫</div>
+        <div class="avoid-name">Chocolate</div>
+        <div class="avoid-reason">Contains theobromine — toxic to dogs, can cause seizures</div>
+      </div>
+      <div class="avoid-card">
+        <div class="avoid-emoji">🧅</div>
+        <div class="avoid-name">Onions & Garlic</div>
+        <div class="avoid-reason">Damages red blood cells, causes anaemia even in small amounts</div>
+      </div>
+      <div class="avoid-card">
+        <div class="avoid-emoji">🍇</div>
+        <div class="avoid-name">Grapes & Raisins</div>
+        <div class="avoid-reason">Can cause sudden kidney failure — even tiny amounts are dangerous</div>
+      </div>
+      <div class="avoid-card">
+        <div class="avoid-emoji">🥑</div>
+        <div class="avoid-name">Avocado</div>
+        <div class="avoid-reason">Contains persin, which can cause vomiting and diarrhoea</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Render weekly calorie bars
+  const weekData = [
+    {day:'Mon',val:1240,target:1270},{day:'Tue',val:1310,target:1270},
+    {day:'Wed',val:1180,target:1270},{day:'Thu',val:1270,target:1270},
+    {day:'Fri',val:1200,target:1270},{day:'Sat',val:1350,target:1270},
+    {day:'Today',val:1140,target:1270},
+  ];
+  const container = document.getElementById('weeklyBars');
+  weekData.forEach(({day, val, target}) => {
+    const pct = Math.min((val / 1400) * 100, 100);
+    const over = val > target;
+    const color = over ? '#f87171' : '#e8541e';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    div.innerHTML = `
+      <div style="width:38px;font-size:11px;color:#666;flex-shrink:0">${day}</div>
+      <div style="flex:1;height:8px;background:#222;border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.8s ease"></div>
+      </div>
+      <div style="width:44px;font-size:12px;text-align:right;color:${over ? '#f87171' : '#f5f2eb'}">${val}</div>
+    `;
+    container.appendChild(div);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Trends — ALL FOR THE PET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a; --surface: #111111; --surface2: #1a1a1a; --surface3: #222222;
+    --white: #f5f2eb; --orange: #e8541e; --orange-light: #f07344;
+    --orange-dim: rgba(232,84,30,0.12); --gray: #7a7670; --gray-dim: #444;
+    --border: rgba(255,255,255,0.07);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.12);
+    --yellow: #facc15; --yellow-dim: rgba(250,204,21,0.12);
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 400; min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: 240px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 32px 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--white); padding: 0 28px 32px; border-bottom: 1px solid var(--border); text-decoration: none; display: block; }
+  .sidebar-logo span { color: var(--orange); }
+  .sidebar-section { padding: 24px 20px 8px; font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--gray-dim); }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; margin: 2px 10px; border-radius: 8px; font-size: 14px; color: var(--gray); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { background: var(--orange-dim); color: var(--orange); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-bottom { margin-top: auto; padding: 20px 10px 0; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+  .range-tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 4px; gap: 2px; }
+  .range-tab { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--gray); cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .range-tab.active { background: var(--orange); color: var(--white); }
+
+  /* CONTENT */
+  .content { padding: 36px 40px; flex: 1; }
+
+  /* SUMMARY CARDS */
+  .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; }
+  .summary-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .summary-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .summary-trend { font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 6px; }
+  .up { background: var(--green-dim); color: var(--green); }
+  .down { background: rgba(248,113,113,0.12); color: #f87171; }
+  .flat { background: var(--surface2); color: var(--gray); }
+  .summary-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; line-height: 1; margin-bottom: 4px; }
+  .summary-label { font-size: 12px; color: var(--gray); }
+  .summary-sub { font-size: 11px; color: var(--gray-dim); margin-top: 6px; }
+
+  /* CHART PANELS */
+  .chart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .chart-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+  .chart-meta { display: flex; align-items: center; gap: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chart-wrap { width: 100%; position: relative; }
+  svg.chart { width: 100%; display: block; }
+
+  /* INSIGHT CARDS */
+  .insights-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .insight-icon { font-size: 28px; margin-bottom: 10px; }
+  .insight-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .insight-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { display: none; } .main { margin-left: 0; }
+    .content { padding: 24px 20px; } .topbar { padding: 16px 20px; }
+    .summary-row { grid-template-columns: 1fr 1fr; }
+    .insights-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">ALL FOR <span>THE PET</span></a>
+  <div class="sidebar-section">Main</div>
+  <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+  <a href="trends.html" class="nav-item active"><span class="nav-icon">📈</span> Health Trends</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓</span> Appointments</a>
+  <a href="nutrition.html" class="nav-item"><span class="nav-icon">🍖</span> Nutrition</a>
+  <div class="sidebar-section">Tools</div>
+  <a href="chat.html" class="nav-item"><span class="nav-icon">🤖</span> AI Advisor</a>
+  <a href="appointments.html" class="nav-item"><span class="nav-icon">🏥</span> Find a Vet</a>
+  <a href="records.html" class="nav-item"><span class="nav-icon">📋</span> Medical Records</a>
+  <div class="sidebar-bottom">
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">←</span> Back to Home</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">HEALTH TRENDS — MAX</div>
+    <div class="range-tabs">
+      <button class="range-tab" onclick="setRange(this,'3d')">3D</button>
+      <button class="range-tab active" onclick="setRange(this,'7d')">7D</button>
+      <button class="range-tab" onclick="setRange(this,'30d')">30D</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-icon" style="background:var(--orange-dim)">🦶</div>
+          <span class="summary-trend up">↑ 8%</span>
+        </div>
+        <div class="summary-val">7,814</div>
+        <div class="summary-label">Avg Daily Steps</div>
+        <div class="summary-sub">vs 7,232 last week</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-icon" style="background:rgba(248,113,113,0.12)">❤️</div>
+          <span class="summary-trend flat">Stable</span>
+        </div>
+        <div class="summary-val">84</div>
+        <div class="summary-label">Avg Resting BPM</div>
+        <div class="summary-sub">Normal range: 60–140 bpm</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-icon" style="background:var(--purple-dim)">🌙</div>
+          <span class="summary-trend down">↓ 5%</span>
+        </div>
+        <div class="summary-val">7.2</div>
+        <div class="summary-label">Avg Sleep (hrs)</div>
+        <div class="summary-sub">vs 7.6 hrs last week</div>
+      </div>
+    </div>
+
+    <!-- Steps chart -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <div class="chart-title">DAILY STEPS</div>
+        <div class="chart-meta">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>This week</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--gray-dim)"></div>Last week</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="stepsChart" height="180" viewBox="0 0 700 180" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <!-- Heart rate chart -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <div class="chart-title">HEART RATE (BPM)</div>
+        <div class="chart-meta">
+          <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Resting HR</div>
+          <div class="legend-item" style="margin-left:4px">
+            <div style="width:20px;height:2px;background:rgba(248,113,113,0.25);border-radius:1px"></div>
+            <span style="font-size:12px;color:var(--gray)">Normal zone</span>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="hrChart" height="180" viewBox="0 0 700 180" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <!-- Sleep chart -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <div class="chart-title">SLEEP DURATION (HRS)</div>
+        <div class="chart-meta">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Sleep hrs</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--gray-dim)"></div>Target (10 hrs)</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="sleepChart" height="180" viewBox="0 0 700 180" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:16px;">AI INSIGHTS</div>
+    <div class="insights-row">
+      <div class="insight-card">
+        <div class="insight-icon">📈</div>
+        <div class="insight-title">Activity Trending Up</div>
+        <div class="insight-desc">Max's average daily steps increased 8% this week. Thursday was the best day with 11,400 steps. Keep it up!</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">😴</div>
+        <div class="insight-title">Sleep Below Target</div>
+        <div class="insight-desc">Sleep dropped to 7.2 hrs average — well below the recommended 10–14 hrs for adult dogs. Try reducing evening stimulation.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">❤️</div>
+        <div class="insight-title">Heart Rate Normal</div>
+        <div class="insight-desc">Resting heart rate has been consistently stable at 80–88 bpm, well within the healthy range. No concerns here.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Today'];
+  const PAD = { l: 48, r: 20, t: 20, b: 36 };
+  const W = 700, H = 180;
+  const INNER_W = W - PAD.l - PAD.r;
+  const INNER_H = H - PAD.t - PAD.b;
+
+  const DATA = {
+    steps:   [7200, 9800, 5900, 11400, 7800, 4600, 8240],
+    stepsLW: [6800, 8200, 7100,  9200, 6500, 5800, 7600],
+    hr:      [82, 86, 80, 88, 84, 81, 82],
+    sleep:   [7.5, 8.0, 6.0, 9.2, 6.5, 8.5, 6.5],
+  };
+
+  function scale(vals, h) {
+    const min = Math.min(...vals) * 0.9;
+    const max = Math.max(...vals) * 1.05;
+    return vals.map(v => h - ((v - min) / (max - min)) * h);
+  }
+
+  function makePoints(ys) {
+    const step = INNER_W / (ys.length - 1);
+    return ys.map((y, i) => [PAD.l + i * step, PAD.t + y]);
+  }
+
+  function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M ${pts[0][0]},${pts[0][1]}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cpx = (pts[i][0] + pts[i+1][0]) / 2;
+      d += ` C ${cpx},${pts[i][1]} ${cpx},${pts[i+1][1]} ${pts[i+1][0]},${pts[i+1][1]}`;
+    }
+    return d;
+  }
+
+  function areaPath(pts) {
+    const bottom = PAD.t + INNER_H;
+    return smoothPath(pts) + ` L ${pts[pts.length-1][0]},${bottom} L ${pts[0][0]},${bottom} Z`;
+  }
+
+  function drawDayLabels(svg) {
+    const step = INNER_W / (DAYS.length - 1);
+    DAYS.forEach((d, i) => {
+      const x = PAD.l + i * step;
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', x); t.setAttribute('y', H - 6);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','11');
+      t.setAttribute('fill','#666'); t.setAttribute('font-family','DM Sans,sans-serif');
+      t.textContent = d; svg.appendChild(t);
+    });
+  }
+
+  function drawHGrid(svg, n = 4) {
+    for (let i = 0; i <= n; i++) {
+      const y = PAD.t + (INNER_H / n) * i;
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', PAD.l); line.setAttribute('x2', W - PAD.r);
+      line.setAttribute('y1', y); line.setAttribute('y2', y);
+      line.setAttribute('stroke','rgba(255,255,255,0.05)'); line.setAttribute('stroke-width','1');
+      svg.appendChild(line);
+    }
+  }
+
+  function drawDots(svg, pts, color) {
+    pts.forEach(([x, y]) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 4);
+      c.setAttribute('fill', color); c.setAttribute('stroke', '#111'); c.setAttribute('stroke-width', '2');
+      svg.appendChild(c);
+    });
+  }
+
+  function buildChart(id, valsCur, valsRef, colorCur, colorRef, gradId) {
+    const svg = document.getElementById(id);
+    svg.innerHTML = '';
+
+    // Defs gradient
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    grad.setAttribute('id', gradId); grad.setAttribute('x1','0'); grad.setAttribute('y1','0');
+    grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+    const s1 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    s1.setAttribute('offset','0%'); s1.setAttribute('stop-color', colorCur); s1.setAttribute('stop-opacity','0.25');
+    const s2 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    s2.setAttribute('offset','100%'); s2.setAttribute('stop-color', colorCur); s2.setAttribute('stop-opacity','0');
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+    const allVals = [...valsCur, ...valsRef];
+    const ys = scale(allVals.slice(0, valsCur.length), INNER_H);
+    const ysRef = scale(allVals, INNER_H).slice(valsCur.length);
+    const ptsCur = makePoints(ys);
+    const ptsRef = makePoints(ysRef);
+
+    drawHGrid(svg);
+
+    // Area fill
+    const area = document.createElementNS('http://www.w3.org/2000/svg','path');
+    area.setAttribute('d', areaPath(ptsCur));
+    area.setAttribute('fill', `url(#${gradId})`);
+    svg.appendChild(area);
+
+    // Reference line
+    if (valsRef) {
+      const refLine = document.createElementNS('http://www.w3.org/2000/svg','path');
+      refLine.setAttribute('d', smoothPath(ptsRef));
+      refLine.setAttribute('fill','none'); refLine.setAttribute('stroke', colorRef || '#444');
+      refLine.setAttribute('stroke-width','2'); refLine.setAttribute('stroke-dasharray','5,4');
+      svg.appendChild(refLine);
+    }
+
+    // Main line
+    const line = document.createElementNS('http://www.w3.org/2000/svg','path');
+    line.setAttribute('d', smoothPath(ptsCur));
+    line.setAttribute('fill','none'); line.setAttribute('stroke', colorCur);
+    line.setAttribute('stroke-width','2.5');
+    svg.appendChild(line);
+
+    drawDots(svg, ptsCur, colorCur);
+    drawDayLabels(svg);
+  }
+
+  function renderCharts() {
+    buildChart('stepsChart', DATA.steps, DATA.stepsLW, '#e8541e', '#444', 'gradSteps');
+
+    // HR — draw target zone band
+    const hrSvg = document.getElementById('hrChart');
+    hrSvg.innerHTML = '';
+    const defs2 = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const g2 = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    g2.setAttribute('id','gradHR'); g2.setAttribute('x1','0'); g2.setAttribute('y1','0'); g2.setAttribute('x2','0'); g2.setAttribute('y2','1');
+    const s1b = document.createElementNS('http://www.w3.org/2000/svg','stop'); s1b.setAttribute('offset','0%'); s1b.setAttribute('stop-color','#f87171'); s1b.setAttribute('stop-opacity','0.2');
+    const s2b = document.createElementNS('http://www.w3.org/2000/svg','stop'); s2b.setAttribute('offset','100%'); s2b.setAttribute('stop-color','#f87171'); s2b.setAttribute('stop-opacity','0');
+    g2.appendChild(s1b); g2.appendChild(s2b); defs2.appendChild(g2); hrSvg.appendChild(defs2);
+
+    // Target zone rect (60–140 mapped to chart space)
+    const band = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    band.setAttribute('x', PAD.l); band.setAttribute('y', PAD.t + INNER_H * 0.1);
+    band.setAttribute('width', INNER_W); band.setAttribute('height', INNER_H * 0.8);
+    band.setAttribute('fill','rgba(248,113,113,0.06)'); band.setAttribute('rx','4');
+    hrSvg.appendChild(band);
+
+    drawHGrid(hrSvg);
+    const hrYs = scale(DATA.hr, INNER_H);
+    const hrPts = makePoints(hrYs);
+    const hrArea = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hrArea.setAttribute('d', areaPath(hrPts)); hrArea.setAttribute('fill','url(#gradHR)'); hrSvg.appendChild(hrArea);
+    const hrLine = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hrLine.setAttribute('d', smoothPath(hrPts)); hrLine.setAttribute('fill','none'); hrLine.setAttribute('stroke','#f87171'); hrLine.setAttribute('stroke-width','2.5'); hrSvg.appendChild(hrLine);
+    drawDots(hrSvg, hrPts, '#f87171');
+    drawDayLabels(hrSvg);
+
+    buildChart('sleepChart', DATA.sleep, null, '#a78bfa', null, 'gradSleep');
+
+    // Target line for sleep (10 hrs) — drawn on top
+    const sleepSvg = document.getElementById('sleepChart');
+    const targetY = PAD.t + INNER_H * 0.05; // near top = 10 hrs target
+    const tLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+    tLine.setAttribute('x1', PAD.l); tLine.setAttribute('x2', W - PAD.r);
+    tLine.setAttribute('y1', targetY); tLine.setAttribute('y2', targetY);
+    tLine.setAttribute('stroke','#444'); tLine.setAttribute('stroke-width','1.5'); tLine.setAttribute('stroke-dasharray','6,4');
+    sleepSvg.appendChild(tLine);
+  }
+
+  function setRange(btn, range) {
+    document.querySelectorAll('.range-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Vary data slightly per range for demo
+    if (range === '3d') {
+      DATA.steps = DATA.steps.slice(4); DATA.stepsLW = DATA.stepsLW.slice(4);
+      DATA.hr = DATA.hr.slice(4); DATA.sleep = DATA.sleep.slice(4);
+    } else {
+      DATA.steps   = [7200,9800,5900,11400,7800,4600,8240];
+      DATA.stepsLW = [6800,8200,7100,9200,6500,5800,7600];
+      DATA.hr      = [82,86,80,88,84,81,82];
+      DATA.sleep   = [7.5,8.0,6.0,9.2,6.5,8.5,6.5];
+    }
+    renderCharts();
+  }
+
+  renderCharts();
+</script>
+</body>
+</html>
