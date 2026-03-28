@@ -7,11 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="auth.js"></script>
-<script>
-  // ── Google Maps API Key ─────────────────────────────────────────────────────
-  // 在這裡填入你的 Google Maps API Key（需開啟 Maps JS API + Places API）
-  window._GMAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
-</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -926,9 +923,9 @@
     document.getElementById('step1Btn').disabled = false;
     // Pan map to selected clinic
     if (_map && _placesData[idx]) {
-      _map.panTo(_placesData[idx].geometry.location);
-      _map.setZoom(16);
-      if (_markers[idx]) google.maps.event.trigger(_markers[idx], 'click');
+      const p = _placesData[idx];
+      _map.flyTo([p.lat, p.lon], 16, { duration: 0.8 });
+      if (_markers[idx]) _markers[idx].openPopup();
     }
   }
 
@@ -948,7 +945,10 @@
       if (activeFilter === 'emergency') filterMatch = name.includes('emergency') || name.includes('24');
       const show = textMatch && filterMatch;
       card.style.display = show ? '' : 'none';
-      if (_markers[i]) _markers[i].setVisible(show);
+      if (_markers[i]) {
+        if (show) { if (_map && !_map.hasLayer(_markers[i])) _markers[i].addTo(_map); }
+        else { _markers[i].remove(); }
+      }
       if (show) visible++;
     });
     document.getElementById('clinicCount').textContent = `${visible} result${visible !== 1 ? 's' : ''}`;
@@ -961,88 +961,121 @@
     filterClinics();
   }
 
-  // ── Google Maps + Places API ──────────────────────────────────────────────────
-  let _map, _service, _infoWindow;
-  let _markers    = [];
-  let _placesData = [];
-  let _userMarker = null;
+  // ── Leaflet + OpenStreetMap / Overpass API ────────────────────────────────────
+  let _map, _markers = [], _placesData = [], _userLat = null, _userLng = null;
+
+  const _ICONS  = ['🏥','🐾','🩺','🔬','🌸','⚕️','🏨','💉','🦮','🐕'];
+  const _COLORS = ['blue','green','orange','purple','pink','yellow','blue','green','orange','purple'];
 
   function _initMap() {
-    const defaultPos = { lat: 25.0330, lng: 121.5654 }; // Taipei fallback
-    _map = new google.maps.Map(document.getElementById('gmap'), {
-      center: defaultPos, zoom: 14,
-      styles: _darkStyle(),
-      streetViewControl: false, mapTypeControl: false, fullscreenControl: false,
-    });
-    _infoWindow = new google.maps.InfoWindow();
+    const defaultLat = 25.0330, defaultLng = 121.5654; // Taipei fallback
+    _map = L.map('gmap', { zoomControl: true, attributionControl: true })
+             .setView([defaultLat, defaultLng], 14);
+
+    // CartoDB Dark Matter — free, no API key
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+      maxZoom: 19,
+    }).addTo(_map);
+
     const loadEl = document.getElementById('mapLoading');
     if (loadEl) loadEl.remove();
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
-          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          _map.setCenter(p);
-          _userMarker = new google.maps.Marker({
-            position: p, map: _map, title: 'Your location',
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8,
-                    fillColor: '#e8541e', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
-          });
-          _searchVets(p);
+          _userLat = pos.coords.latitude;
+          _userLng = pos.coords.longitude;
+          _map.setView([_userLat, _userLng], 14);
+          // User location circle
+          L.circleMarker([_userLat, _userLng], {
+            radius: 9, fillColor: '#e8541e', fillOpacity: 1,
+            color: '#fff', weight: 2,
+          }).addTo(_map).bindPopup('<b>You are here</b>');
+          _searchVets(_userLat, _userLng);
         },
-        () => _searchVets(defaultPos)
+        () => _searchVets(defaultLat, defaultLng)
       );
     } else {
-      _searchVets(defaultPos);
+      _searchVets(defaultLat, defaultLng);
     }
   }
 
-  function _searchVets(pos) {
-    _service = new google.maps.places.PlacesService(_map);
-    _service.nearbySearch({ location: pos, radius: 5000, type: 'veterinary_care' }, _handleResults);
+  async function _searchVets(lat, lng) {
+    document.getElementById('clinicCount').textContent = 'Searching…';
+    const query = `[out:json][timeout:25];(node["amenity"="veterinary"](around:5000,${lat},${lng});way["amenity"="veterinary"](around:5000,${lat},${lng}););out center tags;`;
+    try {
+      const res  = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      _handleResults(data.elements || [], lat, lng);
+    } catch (e) {
+      document.getElementById('clinicCount').textContent = 'Error loading data';
+      document.getElementById('clinicGrid').innerHTML =
+        '<div style="color:var(--gray);font-size:14px;padding:20px 0;grid-column:1/-1">Could not load clinic data. Check your connection and try again.</div>';
+    }
   }
 
-  function _handleResults(results, status) {
+  function _handleResults(elements, userLat, userLng) {
     const grid = document.getElementById('clinicGrid');
-    if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+    // Filter unnamed and compute position
+    const places = elements
+      .map(el => ({
+        lat:     el.lat  ?? el.center?.lat,
+        lon:     el.lon  ?? el.center?.lon,
+        name:    el.tags?.name || el.tags?.['name:en'] || null,
+        address: _buildAddress(el.tags),
+        hours:   el.tags?.opening_hours || null,
+        phone:   el.tags?.phone || null,
+        website: el.tags?.website || null,
+      }))
+      .filter(p => p.name && p.lat && p.lon)
+      // Sort by distance
+      .sort((a, b) => _haversine(userLat, userLng, a.lat, a.lon) - _haversine(userLat, userLng, b.lat, b.lon))
+      .slice(0, 20); // cap at 20
+
+    if (!places.length) {
       document.getElementById('clinicCount').textContent = 'No clinics found nearby';
-      grid.innerHTML = '<div style="color:var(--gray);font-size:14px;padding:20px 0;grid-column:1/-1">No vet clinics found. Allow location access and reload.</div>';
+      grid.innerHTML = '<div style="color:var(--gray);font-size:14px;padding:20px 0;grid-column:1/-1">No vet clinics found in this area. Try allowing location access and reloading.</div>';
       return;
     }
-    _placesData = results;
+
+    _placesData = places;
     CLINICS.length = 0;
-    results.forEach(p => CLINICS.push({ name: p.name, address: p.vicinity || '' }));
-    _renderCards(results);
-    _addMarkers(results);
+    places.forEach(p => CLINICS.push({ name: p.name, address: p.address }));
+    _renderCards(places, userLat, userLng);
+    _addMarkers(places);
   }
 
-  const _ICONS   = ['🏥','🐾','🩺','🔬','🌸','⚕️','🏨','💉','🦮','🐕'];
-  const _COLORS  = ['blue','green','orange','purple','pink','yellow','blue','green','orange','purple'];
+  function _buildAddress(tags) {
+    if (!tags) return '';
+    const parts = [
+      tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:street']} ${tags['addr:housenumber']}` : tags['addr:street'],
+      tags['addr:city'] || tags['addr:town'] || tags['addr:suburb'],
+    ].filter(Boolean);
+    return parts.join(', ') || tags['addr:full'] || '';
+  }
 
-  function _renderCards(places) {
+  function _renderCards(places, userLat, userLng) {
     const grid = document.getElementById('clinicGrid');
     grid.innerHTML = '';
     places.forEach((place, idx) => {
-      const isOpen   = place.opening_hours?.isOpen?.();
-      const rating   = place.rating || 0;
-      const reviews  = place.user_ratings_total || 0;
-      const stars    = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
-      const openChip = isOpen === true
-        ? '<div class="meta-chip green">● Open Now</div>'
-        : isOpen === false ? '<div class="meta-chip" style="color:#f87171">● Closed</div>' : '';
+      const dist    = (userLat && userLng) ? _haversine(userLat, userLng, place.lat, place.lon) : null;
+      const distStr = dist !== null ? (dist < 1000 ? `${Math.round(dist)} m` : `${(dist/1000).toFixed(1)} km`) : null;
+      const hoursChip = place.hours
+        ? `<div class="meta-chip" style="color:#aaa">🕐 ${_esc(place.hours.slice(0,30))}${place.hours.length>30?'…':''}</div>`
+        : '';
 
       const card = document.createElement('div');
       card.className = 'clinic-card';
-      card.dataset.isOpen = isOpen === true ? '1' : '0';
       card.innerHTML = `
         <div class="clinic-avatar ${_COLORS[idx % _COLORS.length]}">${_ICONS[idx % _ICONS.length]}</div>
         <div class="clinic-name">${_esc(place.name)}</div>
-        <div class="clinic-address">${_esc(place.vicinity || '')}</div>
+        ${place.address ? `<div class="clinic-address">${_esc(place.address)}</div>` : ''}
         <div class="clinic-meta">
-          ${openChip}
-          ${_distChip(place)}
+          ${distStr ? `<div class="meta-chip">📍 ${distStr}</div>` : ''}
+          ${hoursChip}
+          ${place.phone ? `<div class="meta-chip">📞 <a href="tel:${_esc(place.phone)}" style="color:inherit;text-decoration:none">${_esc(place.phone)}</a></div>` : ''}
         </div>
-        ${rating ? `<div class="clinic-stars"><span class="stars" style="color:var(--yellow)">${stars}</span><span class="rating-num"> ${rating.toFixed(1)}</span><span class="rating-count"> (${reviews.toLocaleString()} reviews)</span></div>` : ''}
         <button class="map-view-btn" onclick="event.stopPropagation();_focusMarker(${idx})">📍 View on Map</button>
       `;
       card.onclick = () => selectClinic(card, idx);
@@ -1051,75 +1084,48 @@
     document.getElementById('clinicCount').textContent = `${places.length} result${places.length !== 1 ? 's' : ''}`;
   }
 
+  function _pinIcon(n) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40"><path d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28C28 5.4 22.6 0 16 0z" fill="#e8541e"/><text x="16" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="sans-serif">${n}</text></svg>`;
+    return L.divIcon({ className: '', html: svg, iconSize: [32, 40], iconAnchor: [16, 40], popupAnchor: [0, -42] });
+  }
+
   function _addMarkers(places) {
-    _markers.forEach(m => m.setMap(null));
+    _markers.forEach(m => m.remove());
     _markers = [];
-    const pinSvg = (n) => encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40"><path d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28C28 5.4 22.6 0 16 0z" fill="#e8541e"/><text x="16" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="sans-serif">${n}</text></svg>`
-    );
     places.forEach((place, idx) => {
-      const marker = new google.maps.Marker({
-        position: place.geometry.location, map: _map,
-        title: place.name,
-        icon: { url: `data:image/svg+xml;charset=UTF-8,${pinSvg(idx+1)}`, scaledSize: new google.maps.Size(32,40), anchor: new google.maps.Point(16,40) },
-      });
-      marker.addListener('click', () => {
-        const rating = place.rating ? `<br><span style="color:#facc15">★ ${place.rating}</span>` : '';
-        const open   = place.opening_hours?.isOpen?.() === true ? ' · <span style="color:#4ade80">Open</span>' : '';
-        _infoWindow.setContent(
-          `<div style="background:#1a1a1a;color:#f5f2eb;padding:12px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;max-width:220px">` +
-          `<strong style="font-size:14px">${place.name}</strong>` +
-          `<div style="font-size:12px;color:#7a7670;margin-top:3px">${place.vicinity||''}${open}</div>` +
-          `${rating}</div>`
-        );
-        _infoWindow.open(_map, marker);
-      });
+      const popup = L.popup({ className: 'dark-popup', maxWidth: 240 }).setContent(
+        `<div style="font-family:'DM Sans',sans-serif">` +
+        `<strong style="font-size:14px;display:block;margin-bottom:4px">${_esc(place.name)}</strong>` +
+        (place.address ? `<div style="font-size:12px;color:#aaa;margin-bottom:4px">${_esc(place.address)}</div>` : '') +
+        (place.hours   ? `<div style="font-size:11px;color:#888">🕐 ${_esc(place.hours)}</div>` : '') +
+        (place.phone   ? `<div style="font-size:11px;color:#888">📞 ${_esc(place.phone)}</div>` : '') +
+        `</div>`
+      );
+      const marker = L.marker([place.lat, place.lon], { icon: _pinIcon(idx + 1) })
+                      .addTo(_map)
+                      .bindPopup(popup);
       _markers.push(marker);
     });
   }
 
   function _focusMarker(idx) {
     if (!_markers[idx] || !_placesData[idx]) return;
-    _map.setCenter(_placesData[idx].geometry.location);
-    _map.setZoom(16);
-    google.maps.event.trigger(_markers[idx], 'click');
+    _map.flyTo([_placesData[idx].lat, _placesData[idx].lon], 16, { duration: 0.8 });
+    _markers[idx].openPopup();
     document.querySelector('.map-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  function _distChip(place) {
-    if (!_userMarker || !window.google?.maps?.geometry) return '';
-    const d = google.maps.geometry.spherical.computeDistanceBetween(
-      _userMarker.getPosition(), place.geometry.location
-    );
-    const label = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
-    return `<div class="meta-chip">📍 ${label}</div>`;
+  function _haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000, φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1)*Math.PI/180, Δλ = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
   function _esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
-  function _darkStyle() {
-    return [
-      { elementType:'geometry', stylers:[{color:'#1a1a1a'}] },
-      { elementType:'labels.text.stroke', stylers:[{color:'#111'}] },
-      { elementType:'labels.text.fill', stylers:[{color:'#9a9a9a'}] },
-      { featureType:'administrative', elementType:'geometry', stylers:[{color:'#333'}] },
-      { featureType:'road', elementType:'geometry', stylers:[{color:'#2a2a2a'}] },
-      { featureType:'road', elementType:'geometry.stroke', stylers:[{color:'#111'}] },
-      { featureType:'road', elementType:'labels.text.fill', stylers:[{color:'#777'}] },
-      { featureType:'road.highway', elementType:'geometry', stylers:[{color:'#333'}] },
-      { featureType:'poi.park', elementType:'geometry', stylers:[{color:'#1c2a1c'}] },
-      { featureType:'transit', elementType:'geometry', stylers:[{color:'#1a1a1a'}] },
-      { featureType:'water', elementType:'geometry', stylers:[{color:'#0a0a0a'}] },
-    ];
-  }
-
-  // Load Google Maps SDK
-  (function() {
-    const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${window._GMAPS_KEY}&libraries=places,geometry&callback=_initMap`;
-    s.async = true;
-    document.head.appendChild(s);
-  })();
+  // Init map on page load
+  document.addEventListener('DOMContentLoaded', _initMap);
 
   // ── Date picker ──────────────────────────────────────────────────────────────
   function buildDates() {
