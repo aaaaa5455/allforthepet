@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All For The Pet — Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #e8541e;
+    --orange-light: #fdf0ea;
+    --black: #111111;
+    --gray-dark: #444;
+    --gray-mid: #777;
+    --gray-light: #f5f5f5;
+    --border: #e8e8e8;
+  }
+
+  body {
+    background: #fff;
+    color: var(--black);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .no-print { display: none !important; }
+    section { break-inside: avoid; }
+    body { font-size: 13px; }
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  section {
+    padding: 72px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  section:last-of-type { border-bottom: none; }
+
+  /* ── PRINT BUTTON ── */
+  .print-bar {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 100;
+  }
+  .print-btn {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 12px rgba(232,84,30,0.3);
+    transition: background 0.2s;
+  }
+  .print-btn:hover { background: #f07344; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 0 64px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 4px;
+    color: var(--black);
+    margin-bottom: 6px;
+  }
+  .hero-logo span { color: var(--orange); }
+  .hero-tagline {
+    font-size: 15px;
+    color: var(--gray-mid);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+  .hero-headline {
+    font-size: 46px;
+    font-weight: 600;
+    line-height: 1.15;
+    max-width: 680px;
+    margin-bottom: 20px;
+  }
+  .hero-headline em {
+    font-style: normal;
+    color: var(--orange);
+  }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--gray-dark);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--orange-light);
+    color: var(--orange);
+    border: 1px solid rgba(232,84,30,0.2);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 40px;
+  }
+
+  /* ── PAIN POINTS ── */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .pain-card {
+    background: var(--gray-light);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+  }
+  .pain-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .pain-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .pain-desc {
+    font-size: 14px;
+    color: var(--gray-dark);
+    line-height: 1.6;
+  }
+
+  /* ── SOLUTION ── */
+  .solution-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .solution-card {
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .solution-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--orange);
+  }
+  .solution-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+  }
+  .solution-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .solution-desc {
+    font-size: 14px;
+    color: var(--gray-dark);
+    line-height: 1.6;
+  }
+
+  /* ── MOCK SCREENS ── */
+  .screens-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .screen-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .screen-bar {
+    background: #1a1a1a;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .screen-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .screen-url {
+    flex: 1;
+    background: #333;
+    border-radius: 4px;
+    height: 16px;
+    margin: 0 6px;
+  }
+  .screen-body {
+    background: #111;
+    padding: 20px;
+    min-height: 200px;
+  }
+
+  /* Dashboard mock */
+  .mock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .mock-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #f5f2eb;
+  }
+  .mock-logo span { color: #e8541e; }
+  .mock-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #e8541e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #fff; font-weight: 600;
+  }
+  .mock-greeting {
+    font-size: 11px;
+    color: #7a7670;
+    margin-bottom: 14px;
+  }
+  .mock-greeting strong { color: #f5f2eb; font-size: 13px; display: block; margin-bottom: 2px; }
+  .mock-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .mock-card {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 10px;
+    color: #7a7670;
+  }
+  .mock-card-val { font-size: 16px; font-weight: 600; color: #f5f2eb; margin-bottom: 2px; }
+  .mock-card-accent { color: #e8541e; }
+  .mock-bar-wrap { background: #1a1a1a; border-radius: 8px; padding: 10px; }
+  .mock-bar-label { font-size: 10px; color: #7a7670; margin-bottom: 6px; }
+  .mock-bars { display: flex; gap: 4px; align-items: flex-end; height: 40px; }
+  .mock-bar { flex: 1; background: #333; border-radius: 3px 3px 0 0; }
+  .mock-bar.hi { background: #e8541e; }
+
+  /* Chat mock */
+  .mock-chat { display: flex; flex-direction: column; gap: 8px; }
+  .mock-msg {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    line-height: 1.4;
+    max-width: 85%;
+  }
+  .mock-msg.ai { background: #1a1a1a; color: #c0bdb8; align-self: flex-start; }
+  .mock-msg.user { background: #e8541e; color: #fff; align-self: flex-end; }
+  .mock-input {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 10px;
+    color: #444;
+    margin-top: 4px;
+  }
+
+  /* Nutrition mock */
+  .mock-nut-title { font-size: 11px; color: #7a7670; margin-bottom: 10px; }
+  .mock-donut {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: conic-gradient(#e8541e 0deg 115deg, #3b82f6 115deg 200deg, #22c55e 200deg 280deg, #333 280deg 360deg);
+    margin: 0 auto 10px;
+    position: relative;
+  }
+  .mock-donut::after {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    background: #111;
+    border-radius: 50%;
+  }
+  .mock-legend { display: flex; flex-direction: column; gap: 4px; }
+  .mock-legend-row { display: flex; align-items: center; gap: 6px; font-size: 9px; color: #7a7670; }
+  .mock-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  .screen-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-mid);
+    margin-top: 10px;
+  }
+
+  /* ── MARKET ── */
+  .market-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .market-stat {
+    margin-bottom: 32px;
+  }
+  .market-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    color: var(--orange);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .market-desc {
+    font-size: 15px;
+    color: var(--gray-dark);
+  }
+  .market-points { display: flex; flex-direction: column; gap: 16px; }
+  .market-point {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .market-point-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--orange-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .market-point-text { font-size: 14px; color: var(--gray-dark); line-height: 1.5; }
+  .market-point-text strong { color: var(--black); display: block; font-size: 15px; margin-bottom: 2px; }
+
+  /* ── BUSINESS MODEL ── */
+  .biz-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .biz-card {
+    background: var(--black);
+    border-radius: 16px;
+    padding: 32px 24px;
+    color: #f5f2eb;
+    position: relative;
+    overflow: hidden;
+  }
+  .biz-card::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(232,84,30,0.12);
+  }
+  .biz-icon { font-size: 28px; margin-bottom: 16px; }
+  .biz-source {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 8px;
+  }
+  .biz-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+  .biz-desc { font-size: 13px; color: #9a9690; line-height: 1.6; }
+  .biz-highlight {
+    margin-top: 16px;
+    background: rgba(232,84,30,0.12);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--orange);
+    font-weight: 500;
+  }
+
+  /* ── PARTNER ── */
+  .partner-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .partner-card {
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+  }
+  .partner-icon { font-size: 28px; margin-bottom: 12px; }
+  .partner-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .partner-desc { font-size: 14px; color: var(--gray-dark); line-height: 1.6; }
+  .partner-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .partner-tag {
+    background: var(--gray-light);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--gray-dark);
+  }
+  .partner-offer {
+    background: var(--orange-light);
+    border: 1.5px solid rgba(232,84,30,0.2);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .partner-offer-icon { font-size: 36px; flex-shrink: 0; }
+  .partner-offer-title { font-size: 17px; font-weight: 600; color: var(--orange); margin-bottom: 8px; }
+  .partner-offer-desc { font-size: 14px; color: var(--gray-dark); line-height: 1.6; }
+
+  /* ── CONTACT ── */
+  .contact-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .contact-headline { font-size: 28px; font-weight: 600; line-height: 1.3; margin-bottom: 16px; }
+  .contact-sub { font-size: 15px; color: var(--gray-dark); line-height: 1.7; margin-bottom: 28px; }
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    text-decoration: none;
+    color: var(--black);
+    font-size: 15px;
+  }
+  .contact-link-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--orange-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .contact-link span { color: var(--orange); font-weight: 500; }
+  .contact-card {
+    background: var(--black);
+    border-radius: 20px;
+    padding: 36px;
+    color: #f5f2eb;
+  }
+  .contact-card-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+  }
+  .contact-card-logo span { color: var(--orange); }
+  .contact-card-tag { font-size: 12px; color: #555; margin-bottom: 24px; }
+  .contact-card-line { display: flex; flex-direction: column; gap: 14px; }
+  .contact-card-item { font-size: 14px; color: #9a9690; line-height: 1.5; }
+  .contact-card-item strong { color: #f5f2eb; display: block; font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  footer .foot-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--black);
+  }
+  footer .foot-logo span { color: var(--orange); }
+  footer p { font-size: 12px; color: var(--gray-mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .container { padding: 0 20px; }
+    section { padding: 48px 0; }
+    .hero-headline { font-size: 32px; }
+    .pain-grid, .solution-grid, .screens-grid, .biz-grid { grid-template-columns: 1fr; }
+    .market-row, .contact-wrap, .partner-grid { grid-template-columns: 1fr; }
+    .section-title { font-size: 26px; }
+    .market-num { font-size: 56px; }
+    .print-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+  <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-logo">ALL FOR THE <span>PET</span></div>
+    <div class="hero-tagline">Smart Health Platform for Dogs</div>
+    <h1 class="hero-headline">Your dog's health,<br><em>intelligently managed.</em></h1>
+    <p class="hero-sub">An AI-powered platform that gives dog owners a complete picture of their pet's health — from daily nutrition to vet appointments — all in one place.</p>
+    <div class="hero-badges">
+      <span class="badge">AI Health Assistant</span>
+      <span class="badge">Vet Appointment Finder</span>
+      <span class="badge">Nutrition Tracker</span>
+      <span class="badge">Health Records</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEM ── -->
+<section>
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-title">Dog owners face 3 recurring pain points</h2>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-num">01</div>
+        <div class="pain-title">Fragmented Health Records</div>
+        <div class="pain-desc">Vaccination cards, vet prescriptions, and lab results are scattered across physical documents and multiple apps with no unified view.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-num">02</div>
+        <div class="pain-title">Nutrition Guesswork</div>
+        <div class="pain-desc">Most owners have no way to track whether their dog is getting the right calories, protein, and nutrients — leading to obesity and deficiencies.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-num">03</div>
+        <div class="pain-title">No Accessible Expert Advice</div>
+        <div class="pain-desc">Getting a quick answer to "Is this food safe for my dog?" or "Should I see a vet now?" currently means an expensive clinic visit or unreliable online searches.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SOLUTION ── -->
+<section>
+  <div class="container">
+    <div class="section-label">Our Solution</div>
+    <h2 class="section-title">One platform. Every health need covered.</h2>
+    <div class="solution-grid">
+      <div class="solution-card">
+        <div class="solution-icon">🤖</div>
+        <div class="solution-title">AI Health Assistant</div>
+        <div class="solution-desc">24/7 conversational AI answers health questions, flags symptoms, and recommends whether to see a vet — reducing unnecessary clinic visits by up to 40%.</div>
+      </div>
+      <div class="solution-card">
+        <div class="solution-icon">📊</div>
+        <div class="solution-title">Nutrition & Trend Tracker</div>
+        <div class="solution-desc">Log meals and track calories, protein, and key nutrients. Visual trend charts reveal health patterns over weeks and months before they become problems.</div>
+      </div>
+      <div class="solution-card">
+        <div class="solution-icon">📍</div>
+        <div class="solution-title">Vet Finder & Records</div>
+        <div class="solution-desc">GPS-powered vet clinic finder shows real nearby clinics with hours and contact info. All medical records — vaccinations, prescriptions, visits — stored in one place.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SCREENS ── -->
+<section>
+  <div class="container">
+    <div class="section-label">Product</div>
+    <h2 class="section-title">Built for real dog owners</h2>
+    <div class="screens-grid">
+
+      <!-- Dashboard -->
+      <div>
+        <div class="screen-wrap">
+          <div class="screen-bar">
+            <div class="screen-dot" style="background:#ff5f57"></div>
+            <div class="screen-dot" style="background:#febc2e"></div>
+            <div class="screen-dot" style="background:#28c840"></div>
+            <div class="screen-url"></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-header">
+              <div class="mock-logo">ALL FOR THE <span>PET</span></div>
+              <div class="mock-avatar">M</div>
+            </div>
+            <div class="mock-greeting">
+              <strong>Good morning, Max is doing great! 🐾</strong>
+              Today's health score looks good.
+            </div>
+            <div class="mock-cards">
+              <div class="mock-card">
+                <div class="mock-card-val mock-card-accent">87</div>
+                Health Score
+              </div>
+              <div class="mock-card">
+                <div class="mock-card-val">4.2 kg</div>
+                This week
+              </div>
+              <div class="mock-card">
+                <div class="mock-card-val">Day 12</div>
+                Streak
+              </div>
+              <div class="mock-card">
+                <div class="mock-card-val mock-card-accent">Mar 30</div>
+                Next Vet
+              </div>
+            </div>
+            <div class="mock-bar-wrap">
+              <div class="mock-bar-label">Weekly Activity</div>
+              <div class="mock-bars">
+                <div class="mock-bar" style="height:60%"></div>
+                <div class="mock-bar" style="height:80%"></div>
+                <div class="mock-bar hi" style="height:100%"></div>
+                <div class="mock-bar" style="height:75%"></div>
+                <div class="mock-bar" style="height:55%"></div>
+                <div class="mock-bar" style="height:90%"></div>
+                <div class="mock-bar" style="height:70%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">Dashboard</div>
+      </div>
+
+      <!-- Chat -->
+      <div>
+        <div class="screen-wrap">
+          <div class="screen-bar">
+            <div class="screen-dot" style="background:#ff5f57"></div>
+            <div class="screen-dot" style="background:#febc2e"></div>
+            <div class="screen-dot" style="background:#28c840"></div>
+            <div class="screen-url"></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-header">
+              <div class="mock-logo">ALL FOR THE <span>PET</span></div>
+            </div>
+            <div class="mock-chat">
+              <div class="mock-msg ai">Hi! I'm your AI vet assistant. How can I help Max today?</div>
+              <div class="mock-msg user">Can dogs eat blueberries?</div>
+              <div class="mock-msg ai">Yes! Blueberries are safe and healthy for dogs. They're rich in antioxidants and vitamins C & K. Keep portions small — a handful as a treat is perfect for Max's size.</div>
+              <div class="mock-msg user">What about grapes?</div>
+              <div class="mock-msg ai">⚠️ No — grapes are toxic to dogs and can cause kidney failure. Avoid completely.</div>
+              <div class="mock-input">Ask anything about Max's health...</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">AI Chat Assistant</div>
+      </div>
+
+      <!-- Nutrition -->
+      <div>
+        <div class="screen-wrap">
+          <div class="screen-bar">
+            <div class="screen-dot" style="background:#ff5f57"></div>
+            <div class="screen-dot" style="background:#febc2e"></div>
+            <div class="screen-dot" style="background:#28c840"></div>
+            <div class="screen-url"></div>
+          </div>
+          <div class="screen-body">
+            <div class="mock-header">
+              <div class="mock-logo">ALL FOR THE <span>PET</span></div>
+            </div>
+            <div class="mock-nut-title">Today's Nutrition — Max</div>
+            <div class="mock-donut"></div>
+            <div class="mock-legend">
+              <div class="mock-legend-row"><div class="mock-dot" style="background:#e8541e"></div>Protein 38%</div>
+              <div class="mock-legend-row"><div class="mock-dot" style="background:#3b82f6"></div>Fat 28%</div>
+              <div class="mock-legend-row"><div class="mock-dot" style="background:#22c55e"></div>Carbs 22%</div>
+              <div class="mock-legend-row"><div class="mock-dot" style="background:#333"></div>Fiber 12%</div>
+            </div>
+            <div style="margin-top:14px; background:#1a1a1a; border-radius:8px; padding:10px;">
+              <div style="font-size:10px; color:#7a7670; margin-bottom:6px;">Calories Today</div>
+              <div style="font-size:18px; font-weight:600; color:#f5f2eb;">842 <span style="font-size:11px; color:#7a7670;">/ 900 kcal</span></div>
+              <div style="height:4px; background:#333; border-radius:2px; margin-top:8px;">
+                <div style="width:93%; height:100%; background:#e8541e; border-radius:2px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">Nutrition Tracker</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── MARKET ── -->
+<section>
+  <div class="container">
+    <div class="section-label">Market Opportunity</div>
+    <h2 class="section-title">A fast-growing, underserved market</h2>
+    <div class="market-row">
+      <div>
+        <div class="market-stat">
+          <div class="market-num">$6B</div>
+          <div class="market-desc">Global pet health technology market size (2024)</div>
+        </div>
+        <div class="market-stat">
+          <div class="market-num">15%</div>
+          <div class="market-desc">Year-over-year growth rate — outpacing general pet care</div>
+        </div>
+        <div class="market-stat">
+          <div class="market-num">900M+</div>
+          <div class="market-desc">Dogs worldwide, with digital pet care adoption rising rapidly</div>
+        </div>
+      </div>
+      <div class="market-points">
+        <div class="market-point">
+          <div class="market-point-icon">📱</div>
+          <div class="market-point-text">
+            <strong>Mobile-first pet owners</strong>
+            Millennials and Gen Z now make up 67% of pet owners and expect digital-first health management.
+          </div>
+        </div>
+        <div class="market-point">
+          <div class="market-point-icon">🏥</div>
+          <div class="market-point-text">
+            <strong>Rising vet costs</strong>
+            Average annual vet spend grew 32% in 5 years, driving demand for preventive, AI-assisted care.
+          </div>
+        </div>
+        <div class="market-point">
+          <div class="market-point-icon">🤖</div>
+          <div class="market-point-text">
+            <strong>AI adoption tailwind</strong>
+            Consumer comfort with AI health assistants has reached an all-time high — the timing is right.
+          </div>
+        </div>
+        <div class="market-point">
+          <div class="market-point-icon">🌏</div>
+          <div class="market-point-text">
+            <strong>Asia-Pacific opportunity</strong>
+            Taiwan, Japan, and South Korea show the highest per-capita pet spending growth in the region.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BUSINESS MODEL ── -->
+<section>
+  <div class="container">
+    <div class="section-label">Business Model</div>
+    <h2 class="section-title">Three diversified revenue streams</h2>
+    <div class="biz-grid">
+      <div class="biz-card">
+        <div class="biz-icon">💳</div>
+        <div class="biz-source">Stream 01</div>
+        <div class="biz-title">Subscription (SaaS)</div>
+        <div class="biz-desc">Free tier to drive acquisition. Pro plan at $9.99/month unlocks AI chat history, advanced analytics, unlimited health records, and priority vet search.</div>
+        <div class="biz-highlight">Target: 2% free → paid conversion</div>
+      </div>
+      <div class="biz-card">
+        <div class="biz-icon">🏥</div>
+        <div class="biz-source">Stream 02</div>
+        <div class="biz-title">Vet Clinic Partnerships</div>
+        <div class="biz-desc">Featured placement and appointment booking integration for partner clinics. Revenue-share on bookings made directly through the platform's vet finder.</div>
+        <div class="biz-highlight">$99–$299/month per clinic</div>
+      </div>
+      <div class="biz-card">
+        <div class="biz-icon">🛒</div>
+        <div class="biz-source">Stream 03</div>
+        <div class="biz-title">Pet Brand Integrations</div>
+        <div class="biz-desc">AI-driven product recommendations within the nutrition tracker. Pet food and supplement brands pay for contextual placement based on a dog's specific health profile.</div>
+        <div class="biz-highlight">CPM + affiliate commission</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PARTNERSHIP ── -->
+<section>
+  <div class="container">
+    <div class="section-label">Partnership Opportunities</div>
+    <h2 class="section-title">We're looking for the right partners</h2>
+    <div class="partner-grid">
+      <div class="partner-card">
+        <div class="partner-icon">🏥</div>
+        <div class="partner-title">Veterinary Clinics & Chains</div>
+        <div class="partner-desc">Get featured placement in our vet finder, enable direct appointment booking, and access pet health data (with owner consent) to provide more informed care.</div>
+        <div class="partner-tags">
+          <span class="partner-tag">Appointment booking</span>
+          <span class="partner-tag">Featured listing</span>
+          <span class="partner-tag">Health data access</span>
+        </div>
+      </div>
+      <div class="partner-card">
+        <div class="partner-icon">🛍️</div>
+        <div class="partner-title">Pet Food & Supplement Brands</div>
+        <div class="partner-desc">Reach highly engaged dog owners at the moment of nutritional decision-making. Our AI recommends products based on each dog's unique health profile and dietary needs.</div>
+        <div class="partner-tags">
+          <span class="partner-tag">Contextual recommendations</span>
+          <span class="partner-tag">Profile-matched targeting</span>
+          <span class="partner-tag">Affiliate sales</span>
+        </div>
+      </div>
+      <div class="partner-card">
+        <div class="partner-icon">📡</div>
+        <div class="partner-title">Pet Tech & IoT Devices</div>
+        <div class="partner-desc">GPS collar providers, smart feeders, and health monitors can integrate with our platform to feed real-time data directly into the dashboard and AI analysis.</div>
+        <div class="partner-tags">
+          <span class="partner-tag">API integration</span>
+          <span class="partner-tag">Real-time data sync</span>
+          <span class="partner-tag">Co-marketing</span>
+        </div>
+      </div>
+      <div class="partner-card">
+        <div class="partner-icon">🤝</div>
+        <div class="partner-title">Investors & Accelerators</div>
+        <div class="partner-desc">We're raising a pre-seed round to accelerate product development, expand the AI capabilities, and establish our first 100 clinic partnerships across Asia-Pacific.</div>
+        <div class="partner-tags">
+          <span class="partner-tag">Pre-seed stage</span>
+          <span class="partner-tag">APAC focus</span>
+          <span class="partner-tag">Pet-tech vertical</span>
+        </div>
+      </div>
+    </div>
+    <div class="partner-offer">
+      <div class="partner-offer-icon">🚀</div>
+      <div>
+        <div class="partner-offer-title">Early Partner Benefits</div>
+        <div class="partner-offer-desc">Partners who join before our public launch receive preferred pricing locked for 24 months, co-branding opportunities in all user-facing surfaces, and direct input into the product roadmap. We're selectively onboarding founding partners now — capacity is limited.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section>
+  <div class="container">
+    <div class="contact-wrap">
+      <div>
+        <div class="section-label">Get In Touch</div>
+        <div class="contact-headline">Let's build something great for dogs.</div>
+        <p class="contact-sub">Whether you're a potential partner, investor, or just curious about what we're building — we'd love to hear from you. We respond within 24 hours.</p>
+        <a class="contact-link" href="mailto:hello@allforthepet.com">
+          <div class="contact-link-icon">✉️</div>
+          <div><span>hello@allforthepet.com</span><br><small style="color:#777;">General inquiries & partnerships</small></div>
+        </a>
+        <a class="contact-link" href="mailto:invest@allforthepet.com">
+          <div class="contact-link-icon">💼</div>
+          <div><span>invest@allforthepet.com</span><br><small style="color:#777;">Investor relations</small></div>
+        </a>
+        <a class="contact-link" href="#">
+          <div class="contact-link-icon">🌐</div>
+          <div><span>allforthepet.com</span><br><small style="color:#777;">Try the live product</small></div>
+        </a>
+      </div>
+      <div class="contact-card">
+        <div class="contact-card-logo">ALL FOR THE <span>PET</span></div>
+        <div class="contact-card-tag">Smart Health Platform for Dogs</div>
+        <div class="contact-card-line">
+          <div class="contact-card-item">
+            <strong>Stage</strong>
+            Pre-seed · Launching 2025
+          </div>
+          <div class="contact-card-item">
+            <strong>Market</strong>
+            $6B Pet Health Tech · 15% YoY growth
+          </div>
+          <div class="contact-card-item">
+            <strong>Revenue Model</strong>
+            SaaS + Clinic Partnerships + Brand Integrations
+          </div>
+          <div class="contact-card-item">
+            <strong>Target Users</strong>
+            Dog owners in Taiwan, Japan, South Korea
+          </div>
+          <div class="contact-card-item">
+            <strong>Core Features</strong>
+            AI Chat · Nutrition Tracker · Vet Finder · Health Records
+          </div>
+          <div class="contact-card-item">
+            <strong>Looking For</strong>
+            Vet clinic partners · Pet brands · Pre-seed investors
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+    <div class="foot-logo">ALL FOR THE <span>PET</span></div>
+    <p>© 2025 All For The Pet. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>
