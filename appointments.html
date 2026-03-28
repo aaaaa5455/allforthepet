@@ -7,6 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="auth.js"></script>
+<script>
+  // ── Google Maps API Key ─────────────────────────────────────────────────────
+  // 在這裡填入你的 Google Maps API Key（需開啟 Maps JS API + Places API）
+  window._GMAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -561,16 +566,89 @@
   .btn-ghost { background: transparent; color: var(--orange); border: 1px solid rgba(232,84,30,0.3); }
   .btn-ghost:hover { background: var(--orange-dim); }
 
+  /* ── MAPS SPLIT LAYOUT ── */
+  .step1-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 24px;
+  }
+  .map-panel {
+    position: sticky;
+    top: 84px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  #gmap { width: 100%; height: 520px; display: block; }
+  .map-loading {
+    height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--gray);
+    gap: 10px;
+    flex-direction: column;
+    background: var(--surface);
+  }
+  .map-loading-anim { font-size: 36px; animation: mpl 1.5s ease-in-out infinite; }
+  @keyframes mpl { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:0.6} }
+  .list-panel .clinic-grid { grid-template-columns: 1fr; }
+  .map-view-btn {
+    margin-top: 10px; width: 100%;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    color: var(--gray); cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .map-view-btn:hover { background: var(--surface3); color: var(--white); }
+
+  /* ── MOBILE NAV ── */
+  .mobile-nav {
+    display: none; position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #111111; border-top: 1px solid rgba(255,255,255,0.07);
+    z-index: 200; flex-direction: row; height: 60px;
+  }
+  .mobile-nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; text-decoration: none; color: #555;
+    padding: 6px 0; transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-nav-item.active { color: #e8541e; }
+  .mn-icon { font-size: 22px; line-height: 1; }
+  .mn-label { font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
+
   /* ── RESPONSIVE ── */
-  @media (max-width: 1100px) { .clinic-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 900px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; }
-    .content { padding: 24px 20px; }
-    .topbar { padding: 16px 20px; }
-    .progress-bar { padding: 16px 20px; }
-    .clinic-grid { grid-template-columns: 1fr; }
+  @media (max-width: 1100px) {
+    .step1-split { grid-template-columns: 1fr; }
+    #gmap { height: 300px; }
+    .map-panel { position: static; }
+    .list-panel .clinic-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none !important; }
+    .main { margin-left: 0 !important; }
+    .mobile-nav { display: flex; }
+    .content { padding: 20px 16px 76px !important; }
+    .topbar { padding: 14px 16px !important; }
+    .topbar-title { font-size: 18px !important; }
+    .topbar-dog { display: none; }
+    .progress-bar { padding: 14px 16px !important; }
     .step-label { display: none; }
+    #gmap { height: 220px; }
+    .search-row { flex-wrap: wrap; gap: 8px; }
+    .filter-btn { padding: 9px 12px; font-size: 12px; }
+    .list-panel .clinic-grid { grid-template-columns: 1fr; }
+    .time-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    .btn { min-height: 48px; }
+    .reason-chip { padding: 9px 14px; }
+    .confirm-card { padding: 20px 16px; }
   }
 </style>
 </head>
@@ -653,140 +731,28 @@
         <button class="filter-btn" onclick="setFilter('nearby', this)">Nearby</button>
       </div>
 
-      <div class="section-header">
-        <div class="section-title">NEARBY CLINICS</div>
-        <div class="section-count" id="clinicCount">6 results</div>
-      </div>
-
-      <div class="clinic-grid" id="clinicGrid">
-
-        <div class="clinic-card" onclick="selectClinic(this, 0)">
-          <div class="clinic-avatar blue">🏥</div>
-          <div class="clinic-name">Paws & Care Animal Hospital</div>
-          <div class="clinic-address">23 Zhongxiao E. Rd, Sec. 4, Da'an, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip green">● Open until 9 PM</div>
-            <div class="meta-chip">📍 0.8 km</div>
-            <div class="meta-chip">⏱ Next: Today 2:00 PM</div>
-          </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★★</span>
-            <span class="rating-num">4.9</span>
-            <span class="rating-count">(312 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag highlight">Emergency</span>
-            <span class="clinic-tag">Surgery</span>
-            <span class="clinic-tag">Dental</span>
+      <div class="step1-split">
+        <!-- MAP -->
+        <div class="map-panel">
+          <div id="gmap">
+            <div class="map-loading" id="mapLoading">
+              <span class="map-loading-anim">📍</span>
+              Getting your location…
+            </div>
           </div>
         </div>
 
-        <div class="clinic-card" onclick="selectClinic(this, 1)">
-          <div class="clinic-avatar green">🐾</div>
-          <div class="clinic-name">Happy Paws Veterinary Clinic</div>
-          <div class="clinic-address">87 Fuxing S. Rd, Sec. 1, Da'an, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip green">● Open until 8 PM</div>
-            <div class="meta-chip">📍 1.2 km</div>
-            <div class="meta-chip">⏱ Next: Today 3:30 PM</div>
+        <!-- CLINIC LIST -->
+        <div class="list-panel">
+          <div class="section-header">
+            <div class="section-title">NEARBY CLINICS</div>
+            <div class="section-count" id="clinicCount">Searching…</div>
           </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★★</span>
-            <span class="rating-num">4.8</span>
-            <span class="rating-count">(228 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag">Vaccination</span>
-            <span class="clinic-tag">Nutrition</span>
-            <span class="clinic-tag">X-Ray</span>
+          <div class="clinic-grid" id="clinicGrid">
+            <div style="color:var(--gray);font-size:14px;padding:20px 0;grid-column:1/-1">Loading nearby vet clinics…</div>
           </div>
         </div>
-
-        <div class="clinic-card" onclick="selectClinic(this, 2)">
-          <div class="clinic-avatar orange">🩺</div>
-          <div class="clinic-name">Taipei Pet Medical Center</div>
-          <div class="clinic-address">156 Minsheng E. Rd, Sec. 3, Songshan, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip green">● Open 24 hrs</div>
-            <div class="meta-chip">📍 2.1 km</div>
-            <div class="meta-chip">⏱ Next: Today Now</div>
-          </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★☆</span>
-            <span class="rating-num">4.6</span>
-            <span class="rating-count">(504 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag highlight">24/7 Emergency</span>
-            <span class="clinic-tag">ICU</span>
-            <span class="clinic-tag">Oncology</span>
-          </div>
-        </div>
-
-        <div class="clinic-card" onclick="selectClinic(this, 3)">
-          <div class="clinic-avatar purple">🔬</div>
-          <div class="clinic-name">WellPet Specialist Clinic</div>
-          <div class="clinic-address">41 Dunhua N. Rd, Songshan, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip yellow">● Closes at 6 PM</div>
-            <div class="meta-chip">📍 2.6 km</div>
-            <div class="meta-chip">⏱ Next: Tomorrow 10:00 AM</div>
-          </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★★</span>
-            <span class="rating-num">4.9</span>
-            <span class="rating-count">(185 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag">Dermatology</span>
-            <span class="clinic-tag">Cardiology</span>
-            <span class="clinic-tag">MRI</span>
-          </div>
-        </div>
-
-        <div class="clinic-card" onclick="selectClinic(this, 4)">
-          <div class="clinic-avatar pink">🌸</div>
-          <div class="clinic-name">Gentle Paws Clinic</div>
-          <div class="clinic-address">9 Wenzhou St, Da'an, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip green">● Open until 7 PM</div>
-            <div class="meta-chip">📍 3.0 km</div>
-            <div class="meta-chip">⏱ Next: Today 4:00 PM</div>
-          </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★☆</span>
-            <span class="rating-num">4.7</span>
-            <span class="rating-count">(96 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag">Puppy Care</span>
-            <span class="clinic-tag">Grooming</span>
-            <span class="clinic-tag">Behaviour</span>
-          </div>
-        </div>
-
-        <div class="clinic-card" onclick="selectClinic(this, 5)">
-          <div class="clinic-avatar yellow">⚕️</div>
-          <div class="clinic-name">Neihu Animal Hospital</div>
-          <div class="clinic-address">302 Chenggong Rd, Sec. 2, Neihu, Taipei</div>
-          <div class="clinic-meta">
-            <div class="meta-chip green">● Open until 9 PM</div>
-            <div class="meta-chip">📍 4.3 km</div>
-            <div class="meta-chip">⏱ Next: Today 5:00 PM</div>
-          </div>
-          <div class="clinic-stars">
-            <span class="stars">★★★★☆</span>
-            <span class="rating-num">4.5</span>
-            <span class="rating-count">(143 reviews)</span>
-          </div>
-          <div class="clinic-tags">
-            <span class="clinic-tag">General</span>
-            <span class="clinic-tag">Orthopaedics</span>
-            <span class="clinic-tag">Lab Tests</span>
-          </div>
-        </div>
-
-      </div><!-- /clinic-grid -->
+      </div><!-- /step1-split -->
 
       <div class="btn-row">
         <button class="btn btn-primary" id="step1Btn" onclick="goToStep2()" disabled>
@@ -896,15 +862,8 @@
 </div><!-- /main -->
 
 <script>
-  // ── Data ─────────────────────────────────────────────────────────────────────
-  const CLINICS = [
-    { name: 'Paws & Care Animal Hospital',  address: '23 Zhongxiao E. Rd, Sec. 4, Da\'an, Taipei' },
-    { name: 'Happy Paws Veterinary Clinic', address: '87 Fuxing S. Rd, Sec. 1, Da\'an, Taipei' },
-    { name: 'Taipei Pet Medical Center',    address: '156 Minsheng E. Rd, Sec. 3, Songshan, Taipei' },
-    { name: 'WellPet Specialist Clinic',    address: '41 Dunhua N. Rd, Songshan, Taipei' },
-    { name: 'Gentle Paws Clinic',           address: '9 Wenzhou St, Da\'an, Taipei' },
-    { name: 'Neihu Animal Hospital',        address: '302 Chenggong Rd, Sec. 2, Neihu, Taipei' },
-  ];
+  // ── Data (populated by Google Places API) ────────────────────────────────────
+  const CLINICS = []; // { name, address } — filled by _handlePlacesResults
 
   const TAKEN_SLOTS = ['09:00', '10:30', '14:00', '16:30'];
 
@@ -965,6 +924,12 @@
     card.classList.add('selected');
     selectedClinicIdx = idx;
     document.getElementById('step1Btn').disabled = false;
+    // Pan map to selected clinic
+    if (_map && _placesData[idx]) {
+      _map.panTo(_placesData[idx].geometry.location);
+      _map.setZoom(16);
+      if (_markers[idx]) google.maps.event.trigger(_markers[idx], 'click');
+    }
   }
 
   // ── Search / filter ──────────────────────────────────────────────────────────
@@ -975,11 +940,16 @@
     const cards = document.querySelectorAll('.clinic-card');
     let visible = 0;
     cards.forEach((card, i) => {
-      const name = CLINICS[i].name.toLowerCase();
-      const addr = CLINICS[i].address.toLowerCase();
-      const match = name.includes(q) || addr.includes(q);
-      card.style.display = match ? '' : 'none';
-      if (match) visible++;
+      const name = (CLINICS[i]?.name || '').toLowerCase();
+      const addr = (CLINICS[i]?.address || '').toLowerCase();
+      const textMatch = !q || name.includes(q) || addr.includes(q);
+      let filterMatch = true;
+      if (activeFilter === 'open')      filterMatch = card.dataset.isOpen === '1';
+      if (activeFilter === 'emergency') filterMatch = name.includes('emergency') || name.includes('24');
+      const show = textMatch && filterMatch;
+      card.style.display = show ? '' : 'none';
+      if (_markers[i]) _markers[i].setVisible(show);
+      if (show) visible++;
     });
     document.getElementById('clinicCount').textContent = `${visible} result${visible !== 1 ? 's' : ''}`;
   }
@@ -990,6 +960,166 @@
     btn.classList.add('active');
     filterClinics();
   }
+
+  // ── Google Maps + Places API ──────────────────────────────────────────────────
+  let _map, _service, _infoWindow;
+  let _markers    = [];
+  let _placesData = [];
+  let _userMarker = null;
+
+  function _initMap() {
+    const defaultPos = { lat: 25.0330, lng: 121.5654 }; // Taipei fallback
+    _map = new google.maps.Map(document.getElementById('gmap'), {
+      center: defaultPos, zoom: 14,
+      styles: _darkStyle(),
+      streetViewControl: false, mapTypeControl: false, fullscreenControl: false,
+    });
+    _infoWindow = new google.maps.InfoWindow();
+    const loadEl = document.getElementById('mapLoading');
+    if (loadEl) loadEl.remove();
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          _map.setCenter(p);
+          _userMarker = new google.maps.Marker({
+            position: p, map: _map, title: 'Your location',
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8,
+                    fillColor: '#e8541e', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+          });
+          _searchVets(p);
+        },
+        () => _searchVets(defaultPos)
+      );
+    } else {
+      _searchVets(defaultPos);
+    }
+  }
+
+  function _searchVets(pos) {
+    _service = new google.maps.places.PlacesService(_map);
+    _service.nearbySearch({ location: pos, radius: 5000, type: 'veterinary_care' }, _handleResults);
+  }
+
+  function _handleResults(results, status) {
+    const grid = document.getElementById('clinicGrid');
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+      document.getElementById('clinicCount').textContent = 'No clinics found nearby';
+      grid.innerHTML = '<div style="color:var(--gray);font-size:14px;padding:20px 0;grid-column:1/-1">No vet clinics found. Allow location access and reload.</div>';
+      return;
+    }
+    _placesData = results;
+    CLINICS.length = 0;
+    results.forEach(p => CLINICS.push({ name: p.name, address: p.vicinity || '' }));
+    _renderCards(results);
+    _addMarkers(results);
+  }
+
+  const _ICONS   = ['🏥','🐾','🩺','🔬','🌸','⚕️','🏨','💉','🦮','🐕'];
+  const _COLORS  = ['blue','green','orange','purple','pink','yellow','blue','green','orange','purple'];
+
+  function _renderCards(places) {
+    const grid = document.getElementById('clinicGrid');
+    grid.innerHTML = '';
+    places.forEach((place, idx) => {
+      const isOpen   = place.opening_hours?.isOpen?.();
+      const rating   = place.rating || 0;
+      const reviews  = place.user_ratings_total || 0;
+      const stars    = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+      const openChip = isOpen === true
+        ? '<div class="meta-chip green">● Open Now</div>'
+        : isOpen === false ? '<div class="meta-chip" style="color:#f87171">● Closed</div>' : '';
+
+      const card = document.createElement('div');
+      card.className = 'clinic-card';
+      card.dataset.isOpen = isOpen === true ? '1' : '0';
+      card.innerHTML = `
+        <div class="clinic-avatar ${_COLORS[idx % _COLORS.length]}">${_ICONS[idx % _ICONS.length]}</div>
+        <div class="clinic-name">${_esc(place.name)}</div>
+        <div class="clinic-address">${_esc(place.vicinity || '')}</div>
+        <div class="clinic-meta">
+          ${openChip}
+          ${_distChip(place)}
+        </div>
+        ${rating ? `<div class="clinic-stars"><span class="stars" style="color:var(--yellow)">${stars}</span><span class="rating-num"> ${rating.toFixed(1)}</span><span class="rating-count"> (${reviews.toLocaleString()} reviews)</span></div>` : ''}
+        <button class="map-view-btn" onclick="event.stopPropagation();_focusMarker(${idx})">📍 View on Map</button>
+      `;
+      card.onclick = () => selectClinic(card, idx);
+      grid.appendChild(card);
+    });
+    document.getElementById('clinicCount').textContent = `${places.length} result${places.length !== 1 ? 's' : ''}`;
+  }
+
+  function _addMarkers(places) {
+    _markers.forEach(m => m.setMap(null));
+    _markers = [];
+    const pinSvg = (n) => encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40"><path d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28C28 5.4 22.6 0 16 0z" fill="#e8541e"/><text x="16" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="sans-serif">${n}</text></svg>`
+    );
+    places.forEach((place, idx) => {
+      const marker = new google.maps.Marker({
+        position: place.geometry.location, map: _map,
+        title: place.name,
+        icon: { url: `data:image/svg+xml;charset=UTF-8,${pinSvg(idx+1)}`, scaledSize: new google.maps.Size(32,40), anchor: new google.maps.Point(16,40) },
+      });
+      marker.addListener('click', () => {
+        const rating = place.rating ? `<br><span style="color:#facc15">★ ${place.rating}</span>` : '';
+        const open   = place.opening_hours?.isOpen?.() === true ? ' · <span style="color:#4ade80">Open</span>' : '';
+        _infoWindow.setContent(
+          `<div style="background:#1a1a1a;color:#f5f2eb;padding:12px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;max-width:220px">` +
+          `<strong style="font-size:14px">${place.name}</strong>` +
+          `<div style="font-size:12px;color:#7a7670;margin-top:3px">${place.vicinity||''}${open}</div>` +
+          `${rating}</div>`
+        );
+        _infoWindow.open(_map, marker);
+      });
+      _markers.push(marker);
+    });
+  }
+
+  function _focusMarker(idx) {
+    if (!_markers[idx] || !_placesData[idx]) return;
+    _map.setCenter(_placesData[idx].geometry.location);
+    _map.setZoom(16);
+    google.maps.event.trigger(_markers[idx], 'click');
+    document.querySelector('.map-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function _distChip(place) {
+    if (!_userMarker || !window.google?.maps?.geometry) return '';
+    const d = google.maps.geometry.spherical.computeDistanceBetween(
+      _userMarker.getPosition(), place.geometry.location
+    );
+    const label = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    return `<div class="meta-chip">📍 ${label}</div>`;
+  }
+
+  function _esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  function _darkStyle() {
+    return [
+      { elementType:'geometry', stylers:[{color:'#1a1a1a'}] },
+      { elementType:'labels.text.stroke', stylers:[{color:'#111'}] },
+      { elementType:'labels.text.fill', stylers:[{color:'#9a9a9a'}] },
+      { featureType:'administrative', elementType:'geometry', stylers:[{color:'#333'}] },
+      { featureType:'road', elementType:'geometry', stylers:[{color:'#2a2a2a'}] },
+      { featureType:'road', elementType:'geometry.stroke', stylers:[{color:'#111'}] },
+      { featureType:'road', elementType:'labels.text.fill', stylers:[{color:'#777'}] },
+      { featureType:'road.highway', elementType:'geometry', stylers:[{color:'#333'}] },
+      { featureType:'poi.park', elementType:'geometry', stylers:[{color:'#1c2a1c'}] },
+      { featureType:'transit', elementType:'geometry', stylers:[{color:'#1a1a1a'}] },
+      { featureType:'water', elementType:'geometry', stylers:[{color:'#0a0a0a'}] },
+    ];
+  }
+
+  // Load Google Maps SDK
+  (function() {
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${window._GMAPS_KEY}&libraries=places,geometry&callback=_initMap`;
+    s.async = true;
+    document.head.appendChild(s);
+  })();
 
   // ── Date picker ──────────────────────────────────────────────────────────────
   function buildDates() {
@@ -1106,5 +1236,13 @@
   setStep(1);
   initAuth();
 </script>
+
+<nav class="mobile-nav">
+  <a href="dashboard.html" class="mobile-nav-item"><span class="mn-icon">📊</span><span class="mn-label">Home</span></a>
+  <a href="appointments.html" class="mobile-nav-item active"><span class="mn-icon">🗓</span><span class="mn-label">Vets</span></a>
+  <a href="chat.html" class="mobile-nav-item"><span class="mn-icon">🤖</span><span class="mn-label">AI</span></a>
+  <a href="nutrition.html" class="mobile-nav-item"><span class="mn-icon">🍖</span><span class="mn-label">Nutrition</span></a>
+  <a href="pricing.html" class="mobile-nav-item"><span class="mn-icon">⭐</span><span class="mn-label">Pro</span></a>
+</nav>
 </body>
 </html>
