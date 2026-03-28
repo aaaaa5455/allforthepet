@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutrition — ALL FOR THE PET</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="auth.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -117,14 +119,25 @@
   <a href="appointments.html" class="nav-item"><span class="nav-icon">🏥</span> Find a Vet</a>
   <a href="records.html" class="nav-item"><span class="nav-icon">📋</span> Medical Records</a>
   <div class="sidebar-bottom">
-    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
-    <a href="index.html" class="nav-item"><span class="nav-icon">←</span> Back to Home</a>
+    <div class="sidebar-user-panel" onclick="openDogProfile()" style="cursor:pointer" title="Edit Profile">
+      <div class="sidebar-user-avatar">🐾</div>
+      <div class="sidebar-user-text">
+        <div class="sidebar-user-name" id="sidebarUserName">Loading...</div>
+        <div class="sidebar-user-email" id="sidebarUserEmail"></div>
+      </div>
+    </div>
+    <a href="#" class="nav-item" onclick="openDogProfile();return false;">
+      <span class="nav-icon">⚙️</span> Dog Profile
+    </a>
+    <a href="#" class="nav-item" onclick="signOut();return false;">
+      <span class="nav-icon">→</span> Log Out
+    </a>
   </div>
 </aside>
 
 <div class="main">
   <header class="topbar">
-    <div class="topbar-title">NUTRITION — MAX</div>
+    <div class="topbar-title">NUTRITION — <span id="topDogName">MAX</span></div>
     <div class="topbar-badge">✓ On Track Today</div>
   </header>
 
@@ -366,6 +379,7 @@
     `;
     container.appendChild(div);
   });
+  initAuth();
 </script>
 </body>
 </html>

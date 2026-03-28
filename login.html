@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALL FOR THE PET — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    color: #f5f2eb;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .auth-wrap {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .auth-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: #f5f2eb;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .auth-logo span { color: #e8541e; }
+
+  .auth-tagline {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 40px;
+  }
+
+  .auth-card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 36px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    background: #e8541e;
+    color: #f5f2eb;
+  }
+
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+
+  .auth-field {
+    margin-bottom: 16px;
+  }
+  .auth-label {
+    font-size: 12px;
+    color: #7a7670;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .auth-input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #f5f2eb;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: rgba(232,84,30,0.5); }
+  .auth-input::placeholder { color: #333; }
+
+  .auth-btn {
+    width: 100%;
+    background: #e8541e;
+    color: #f5f2eb;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .auth-btn:hover:not(:disabled) { background: #f07344; }
+  .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .auth-error {
+    font-size: 13px;
+    color: #f87171;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-success {
+    font-size: 13px;
+    color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+  .auth-divider span { font-size: 12px; color: #333; }
+
+  .auth-forgot {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 16px;
+  }
+  .auth-forgot a {
+    font-size: 12px;
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .auth-forgot a:hover { color: #e8541e; }
+
+  .auth-footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: #333;
+  }
+  .auth-footer a {
+    color: #e8541e;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .auth-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <a href="index.html" class="auth-logo">ALL FOR THE <span>PET</span></a>
+  <p class="auth-tagline">Smart health platform for dogs</p>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form active" id="loginForm">
+      <div class="auth-error"   id="loginError"></div>
+      <div class="auth-success" id="loginSuccess"></div>
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="auth-forgot"><a onclick="showForgotPassword()">Forgot password?</a></div>
+      <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div class="auth-form" id="signupForm">
+      <div class="auth-error"   id="signupError"></div>
+      <div class="auth-success" id="signupSuccess"></div>
+      <div class="auth-field">
+        <label class="auth-label">Your Name</label>
+        <input class="auth-input" id="signupName" type="text" placeholder="Jane Smith" autocomplete="name">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Dog's Name</label>
+        <input class="auth-input" id="signupDogName" type="text" placeholder="e.g. Max">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="signupEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="signupPassword" type="password" placeholder="Min. 6 characters" autocomplete="new-password">
+      </div>
+      <button class="auth-btn" id="signupBtn" onclick="handleSignup()">Create Account</button>
+    </div>
+  </div>
+
+  <p class="auth-footer">
+    By signing in you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>
+  </p>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://bixnbbwpfggjmvxkxxcm.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_t-NlTtMEbX617Zcqi4Gnag_ca6FqfQa';
+  const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Redirect if already logged in
+  (async () => {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session) window.location.href = 'dashboard.html';
+  })();
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+    });
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+  }
+
+  function setLoading(btnId, loading, defaultText) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait...' : defaultText;
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function showSuccess(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideMessages(errorId, successId) {
+    document.getElementById(errorId).style.display = 'none';
+    document.getElementById(successId).style.display = 'none';
+  }
+
+  async function handleLogin() {
+    hideMessages('loginError', 'loginSuccess');
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) { showError('loginError', 'Please enter your email and password.'); return; }
+
+    setLoading('loginBtn', true, 'Sign In');
+    const { error } = await _sb.auth.signInWithPassword({ email, password });
+    setLoading('loginBtn', false, 'Sign In');
+
+    if (error) { showError('loginError', error.message); return; }
+    window.location.href = 'dashboard.html';
+  }
+
+  async function handleSignup() {
+    hideMessages('signupError', 'signupSuccess');
+    const name     = document.getElementById('signupName').value.trim();
+    const dogName  = document.getElementById('signupDogName').value.trim();
+    const email    = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+
+    if (!email || !password) { showError('signupError', 'Please fill in email and password.'); return; }
+    if (password.length < 6)  { showError('signupError', 'Password must be at least 6 characters.'); return; }
+
+    setLoading('signupBtn', true, 'Create Account');
+    const { error } = await _sb.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, dog_name: dogName } }
+    });
+    setLoading('signupBtn', false, 'Create Account');
+
+    if (error) { showError('signupError', error.message); return; }
+
+    showSuccess('signupSuccess', 'Account created! Check your email to confirm, then sign in.');
+    setTimeout(() => switchTab('login'), 3000);
+  }
+
+  async function showForgotPassword() {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) { showError('loginError', 'Enter your email above, then click Forgot password.'); return; }
+
+    hideMessages('loginError', 'loginSuccess');
+    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/login.html'
+    });
+    if (error) { showError('loginError', error.message); return; }
+    showSuccess('loginSuccess', 'Password reset link sent — check your email.');
+  }
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('loginForm').classList.contains('active')) handleLogin();
+    else handleSignup();
+  });
+</script>
+</body>
+</html>

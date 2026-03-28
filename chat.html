@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Vet Chat — ALL FOR THE PET</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="auth.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -461,11 +463,18 @@
   </a>
 
   <div class="sidebar-bottom">
-    <a href="dashboard.html" class="nav-item">
-      <span class="nav-icon">⚙️</span> Settings
+    <div class="sidebar-user-panel" onclick="openDogProfile()" style="cursor:pointer" title="Edit Profile">
+      <div class="sidebar-user-avatar">🐾</div>
+      <div class="sidebar-user-text">
+        <div class="sidebar-user-name" id="sidebarUserName">Loading...</div>
+        <div class="sidebar-user-email" id="sidebarUserEmail"></div>
+      </div>
+    </div>
+    <a href="#" class="nav-item" onclick="openDogProfile();return false;">
+      <span class="nav-icon">⚙️</span> Dog Profile
     </a>
-    <a href="index.html" class="nav-item">
-      <span class="nav-icon">←</span> Back to Home
+    <a href="#" class="nav-item" onclick="signOut();return false;">
+      <span class="nav-icon">→</span> Log Out
     </a>
   </div>
 </aside>
@@ -798,6 +807,7 @@ Always end responses that involve potential health issues with a reminder to con
 
   // ── Init ─────────────────────────────────────────────────────────────────────
   loadApiKey();
+  initAuth();
 </script>
 </body>
 </html>
