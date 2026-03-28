@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — ALL FOR THE PET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="auth.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --surface3: #222222;
+    --white: #f5f2eb;
+    --orange: #e8541e;
+    --orange-light: #f07344;
+    --orange-dim: rgba(232,84,30,0.12);
+    --gray: #7a7670;
+    --gray-dim: #444;
+    --border: rgba(255,255,255,0.07);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+  }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 32px 0;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+  }
+  .sidebar-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
+    color: var(--white); padding: 0 28px 32px;
+    border-bottom: 1px solid var(--border); text-decoration: none; display: block;
+  }
+  .sidebar-logo span { color: var(--orange); }
+  .sidebar-section {
+    padding: 24px 20px 8px; font-size: 10px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gray-dim);
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 20px; margin: 2px 10px; border-radius: 8px;
+    font-size: 14px; color: var(--gray); cursor: pointer;
+    transition: background 0.15s, color 0.15s; text-decoration: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { background: var(--orange-dim); color: var(--orange); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-bottom { margin-top: auto; padding: 20px 10px 0; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px; border-bottom: 1px solid var(--border);
+    background: var(--surface); position: sticky; top: 0; z-index: 40;
+  }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+
+  /* CONTENT */
+  .content { padding: 52px 40px; flex: 1; max-width: 960px; margin: 0 auto; width: 100%; }
+
+  /* HERO */
+  .pricing-hero { text-align: center; margin-bottom: 56px; }
+  .pricing-eyebrow {
+    font-size: 11px; font-weight: 500; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--orange); margin-bottom: 14px;
+  }
+  .pricing-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; letter-spacing: 3px; line-height: 1;
+    margin-bottom: 14px;
+  }
+  .pricing-sub { font-size: 15px; color: var(--gray); max-width: 440px; margin: 0 auto; line-height: 1.6; }
+
+  /* CARDS */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 52px;
+  }
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    display: flex; flex-direction: column;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .plan-card.pro {
+    border-color: var(--orange);
+    background: linear-gradient(145deg, #141414, #111);
+  }
+  .plan-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--orange); color: var(--white);
+    font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 4px 16px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .plan-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .plan-card.pro .plan-name { color: var(--orange); }
+  .plan-desc { font-size: 13px; color: var(--gray); margin-bottom: 28px; line-height: 1.5; }
+  .plan-price {
+    display: flex; align-items: baseline; gap: 4px;
+    margin-bottom: 28px;
+  }
+  .plan-price-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px; letter-spacing: 1px;
+  }
+  .plan-price-currency { font-size: 22px; color: var(--gray); margin-bottom: 6px; }
+  .plan-price-period { font-size: 13px; color: var(--gray); margin-bottom: 4px; }
+
+  .plan-features { list-style: none; margin-bottom: 32px; flex: 1; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: #ccc;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .plan-features li:last-child { border-bottom: none; }
+  .feat-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .feat-text-muted { color: var(--gray-dim); }
+
+  .plan-btn {
+    width: 100%; padding: 14px;
+    border-radius: 10px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .plan-btn-free {
+    background: var(--surface2);
+    color: var(--gray);
+    border: 1px solid var(--border);
+  }
+  .plan-btn-free:hover { background: var(--surface3); color: var(--white); }
+  .plan-btn-pro {
+    background: var(--orange);
+    color: var(--white);
+  }
+  .plan-btn-pro:hover { background: var(--orange-light); }
+
+  /* COMPARISON TABLE */
+  .compare-wrap { margin-bottom: 52px; }
+  .compare-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gray-dim); margin-bottom: 18px;
+  }
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th {
+    padding: 12px 20px; text-align: left;
+    font-size: 12px; font-weight: 500; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--gray-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-table th:not(:first-child) { text-align: center; }
+  .compare-table td {
+    padding: 14px 20px; font-size: 14px; color: #ccc;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .compare-table td:not(:first-child) { text-align: center; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .check-yes { color: var(--green); font-size: 16px; }
+  .check-no  { color: var(--gray-dim); font-size: 16px; }
+  .check-pro { color: var(--orange); font-size: 12px; font-weight: 500; letter-spacing: 0.5px; }
+
+  /* FAQ */
+  .faq-wrap { margin-bottom: 52px; }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+  }
+  .faq-q {
+    font-size: 15px; font-weight: 500; color: var(--white);
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+  }
+  .faq-arrow { color: var(--gray); font-size: 12px; transition: transform 0.2s; flex-shrink: 0; }
+  .faq-item.open .faq-arrow { transform: rotate(180deg); }
+  .faq-a {
+    font-size: 14px; color: var(--gray); line-height: 1.7;
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.2s;
+  }
+  .faq-item.open .faq-a { max-height: 200px; margin-top: 10px; }
+
+  /* STRIPE MODAL */
+  .stripe-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 2000;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .stripe-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .stripe-card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%; max-width: 460px;
+    position: relative;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .stripe-close {
+    position: absolute; top: 18px; right: 18px;
+    background: rgba(255,255,255,0.06); border: none;
+    color: var(--gray); width: 30px; height: 30px;
+    border-radius: 50%; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .stripe-close:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+
+  .stripe-header { margin-bottom: 28px; }
+  .stripe-plan-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--orange-dim); color: var(--orange);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.5px;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+  }
+  .stripe-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; letter-spacing: 2px; margin-bottom: 4px;
+  }
+  .stripe-subtitle { font-size: 13px; color: var(--gray); }
+
+  .stripe-amount-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface2); border-radius: 12px; padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .stripe-amount-label { font-size: 13px; color: var(--gray); }
+  .stripe-amount-val {
+    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    letter-spacing: 1px; color: var(--orange);
+  }
+
+  .stripe-field-label {
+    font-size: 12px; color: var(--gray); margin-bottom: 8px; display: block;
+  }
+  .stripe-field { margin-bottom: 18px; }
+  #card-element {
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  #card-element.StripeElement--focus { border-color: rgba(232,84,30,0.5); }
+  #card-element.StripeElement--invalid { border-color: rgba(248,113,113,0.5); }
+
+  .stripe-error {
+    font-size: 13px; color: #f87171;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 16px; display: none;
+  }
+
+  .stripe-pay-btn {
+    width: 100%; background: var(--orange); color: var(--white);
+    border: none; border-radius: 10px; padding: 15px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: background 0.2s; display: flex;
+    align-items: center; justify-content: center; gap: 8px;
+  }
+  .stripe-pay-btn:hover:not(:disabled) { background: var(--orange-light); }
+  .stripe-pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .stripe-secure {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 14px; font-size: 12px; color: var(--gray-dim);
+  }
+
+  /* SUCCESS SCREEN */
+  .stripe-success {
+    display: none;
+    text-align: center; padding: 16px 0;
+  }
+  .stripe-success.show { display: block; }
+  .success-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--green-dim); border: 2px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin: 0 auto 20px;
+  }
+  .success-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px; margin-bottom: 8px; color: var(--green);
+  }
+  .success-text { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+  .success-btn {
+    background: var(--surface2); color: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 13px 28px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .success-btn:hover { background: var(--surface3); }
+
+  @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 36px 20px; } }
+  @media (max-width: 640px) { .plans-grid { grid-template-columns: 1fr; } .pricing-headline { font-size: 38px; } }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">ALL FOR <span>THE PET</span></a>
+
+  <div class="sidebar-section">Main</div>
+  <a href="dashboard.html" class="nav-item">
+    <span class="nav-icon">📊</span> Dashboard
+  </a>
+  <a href="trends.html" class="nav-item">
+    <span class="nav-icon">📈</span> Health Trends
+  </a>
+  <a href="appointments.html" class="nav-item">
+    <span class="nav-icon">🗓</span> Appointments
+  </a>
+  <a href="nutrition.html" class="nav-item">
+    <span class="nav-icon">🍖</span> Nutrition
+  </a>
+
+  <div class="sidebar-section">Tools</div>
+  <a href="chat.html" class="nav-item">
+    <span class="nav-icon">🤖</span> AI Advisor
+  </a>
+  <a href="appointments.html" class="nav-item">
+    <span class="nav-icon">🏥</span> Find a Vet
+  </a>
+  <a href="records.html" class="nav-item">
+    <span class="nav-icon">📋</span> Medical Records
+  </a>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-user-panel" onclick="openDogProfile()" style="cursor:pointer" title="Edit Profile">
+      <div class="sidebar-user-avatar">🐾</div>
+      <div class="sidebar-user-text">
+        <div class="sidebar-user-name" id="sidebarUserName">Loading...</div>
+        <div class="sidebar-user-email" id="sidebarUserEmail"></div>
+      </div>
+    </div>
+    <a href="pricing.html" class="nav-item active">
+      <span class="nav-icon">⭐</span> Upgrade to Pro
+    </a>
+    <a href="#" class="nav-item" onclick="openDogProfile();return false;">
+      <span class="nav-icon">⚙️</span> Dog Profile
+    </a>
+    <a href="#" class="nav-item" onclick="signOut();return false;">
+      <span class="nav-icon">→</span> Log Out
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">PLANS & PRICING</div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="pricing-hero">
+      <div class="pricing-eyebrow">Simple Pricing</div>
+      <div class="pricing-headline">CHOOSE YOUR PLAN</div>
+      <p class="pricing-sub">Start free, upgrade when you're ready. No hidden fees, cancel anytime.</p>
+    </div>
+
+    <!-- PLAN CARDS -->
+    <div class="plans-grid">
+
+      <!-- FREE -->
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <p class="plan-desc">Everything you need to get started tracking your dog's health journey.</p>
+        <div class="plan-price">
+          <span class="plan-price-currency">$</span>
+          <span class="plan-price-amount">0</span>
+          <span class="plan-price-period">/ month</span>
+        </div>
+        <ul class="plan-features">
+          <li><span class="feat-icon">✓</span> Health Dashboard</li>
+          <li><span class="feat-icon">✓</span> Basic activity tracking</li>
+          <li><span class="feat-icon">✓</span> 7-day health trends</li>
+          <li><span class="feat-icon">✓</span> Vet appointment booking</li>
+          <li><span class="feat-icon">✓</span> 1 dog profile</li>
+          <li><span class="feat-icon" style="color:var(--gray-dim)">✗</span> <span class="feat-text-muted">AI Vet Advisor (5 msg/day limit)</span></li>
+          <li><span class="feat-icon" style="color:var(--gray-dim)">✗</span> <span class="feat-text-muted">Nutrition AI recommendations</span></li>
+          <li><span class="feat-icon" style="color:var(--gray-dim)">✗</span> <span class="feat-text-muted">Medical records export</span></li>
+        </ul>
+        <button class="plan-btn plan-btn-free">Current Plan</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan-card pro">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <p class="plan-desc">Full access to all AI features and advanced health analytics for your pup.</p>
+        <div class="plan-price">
+          <span class="plan-price-currency">$</span>
+          <span class="plan-price-amount">9.99</span>
+          <span class="plan-price-period">/ month</span>
+        </div>
+        <ul class="plan-features">
+          <li><span class="feat-icon">✓</span> Everything in Free</li>
+          <li><span class="feat-icon">✓</span> <strong>Unlimited</strong> AI Vet Advisor</li>
+          <li><span class="feat-icon">✓</span> 30-day health trends & insights</li>
+          <li><span class="feat-icon">✓</span> Nutrition AI recommendations</li>
+          <li><span class="feat-icon">✓</span> Medical records export (PDF)</li>
+          <li><span class="feat-icon">✓</span> Vaccine & medication reminders</li>
+          <li><span class="feat-icon">✓</span> Up to 3 dog profiles</li>
+          <li><span class="feat-icon">✓</span> Priority support</li>
+        </ul>
+        <button class="plan-btn plan-btn-pro" onclick="openCheckout()">Upgrade to Pro →</button>
+      </div>
+
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="compare-wrap">
+      <div class="compare-label">Full Feature Comparison</div>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Health Dashboard</td><td><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Activity Tracking</td><td><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Vet Appointment Booking</td><td><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Dog Profiles</td><td>1</td><td><span class="check-pro">UP TO 3</span></td></tr>
+          <tr><td>Health Trends History</td><td>7 days</td><td><span class="check-pro">30 DAYS</span></td></tr>
+          <tr><td>AI Vet Advisor</td><td>5 msg/day</td><td><span class="check-pro">UNLIMITED</span></td></tr>
+          <tr><td>Nutrition AI</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Medical Records Export</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Vaccine & Med Reminders</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✓</span></td></tr>
+          <tr><td>Priority Support</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-wrap">
+      <div class="compare-label">Frequently Asked Questions</div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I cancel anytime?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Yes, you can cancel your Pro subscription at any time from your account settings. You'll keep Pro access until the end of your billing period, then revert to the Free plan. No cancellation fees.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Is my payment information secure?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Absolutely. All payments are processed securely by Stripe, a PCI-DSS Level 1 certified payment provider. We never store your card details on our servers.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What happens to my data if I downgrade?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Your data is always safe. If you downgrade to Free, your historical records and health data are preserved. You'll lose access to Pro features but not your data.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I use the platform for multiple dogs?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">The Free plan supports 1 dog profile. With Pro, you can add up to 3 dog profiles and manage their health, nutrition, and vet appointments independently.</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- STRIPE PAYMENT MODAL -->
+<div class="stripe-overlay" id="stripeModal" onclick="if(event.target===this)closeCheckout()">
+  <div class="stripe-card">
+    <button class="stripe-close" onclick="closeCheckout()">✕</button>
+
+    <!-- PAYMENT FORM -->
+    <div id="stripeForm">
+      <div class="stripe-header">
+        <div class="stripe-plan-badge">⭐ PRO PLAN</div>
+        <div class="stripe-title">UPGRADE TO PRO</div>
+        <div class="stripe-subtitle">Full AI access for your dog's health</div>
+      </div>
+
+      <div class="stripe-amount-row">
+        <span class="stripe-amount-label">Monthly subscription</span>
+        <span class="stripe-amount-val">$9.99 / mo</span>
+      </div>
+
+      <div class="stripe-field">
+        <label class="stripe-field-label">Card Details</label>
+        <div id="card-element"></div>
+      </div>
+
+      <div class="stripe-error" id="stripeError"></div>
+
+      <button class="stripe-pay-btn" id="stripePayBtn" onclick="handlePayment()">
+        <span>🔒</span> Pay $9.99
+      </button>
+
+      <div class="stripe-secure">🔒 Secured by Stripe · PCI DSS Compliant</div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="stripe-success" id="stripeSuccess">
+      <div class="success-icon">✓</div>
+      <div class="success-title">YOU'RE PRO!</div>
+      <p class="success-text">
+        Welcome to All For The Pet Pro.<br>
+        Your AI Vet Advisor is now unlimited and all Pro features are active.
+      </p>
+      <button class="success-btn" onclick="closeCheckout();window.location.href='dashboard.html'">
+        Go to Dashboard →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const _stripe = Stripe('pk_test_51TFpSI0ec9dwlrf8aLLu31h3IbN7H89Akh1Ch2GLLxVd7Cz1yrH7hba01EnHj4iLfdHNS2kFn6noHokbq1KHjElM00JnxkSOu9');
+  let _cardElement = null;
+
+  function _mountCard() {
+    if (_cardElement) return;
+    const elements = _stripe.elements({
+      fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap' }]
+    });
+    _cardElement = elements.create('card', {
+      style: {
+        base: {
+          color: '#f5f2eb',
+          fontFamily: '"DM Sans", sans-serif',
+          fontSize: '14px',
+          fontSmoothing: 'antialiased',
+          '::placeholder': { color: '#444' },
+          iconColor: '#7a7670',
+        },
+        invalid: { color: '#f87171', iconColor: '#f87171' },
+      },
+    });
+    _cardElement.mount('#card-element');
+    _cardElement.on('change', e => {
+      const el = document.getElementById('stripeError');
+      if (e.error) { el.textContent = e.error.message; el.style.display = 'block'; }
+      else           { el.style.display = 'none'; }
+    });
+  }
+
+  function openCheckout() {
+    document.getElementById('stripeModal').classList.add('open');
+    document.getElementById('stripeForm').style.display = 'block';
+    document.getElementById('stripeSuccess').classList.remove('show');
+    document.getElementById('stripeError').style.display = 'none';
+    // Mount card after modal is visible so Stripe can measure the element
+    requestAnimationFrame(_mountCard);
+  }
+
+  function closeCheckout() {
+    document.getElementById('stripeModal').classList.remove('open');
+  }
+
+  async function handlePayment() {
+    const btn = document.getElementById('stripePayBtn');
+    const errEl = document.getElementById('stripeError');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Processing...';
+    errEl.style.display = 'none';
+
+    // Create a PaymentMethod to validate the card (actual charge requires a backend PaymentIntent)
+    const { paymentMethod, error } = await _stripe.createPaymentMethod({
+      type: 'card',
+      card: _cardElement,
+    });
+
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '<span>🔒</span> Pay $9.99';
+      return;
+    }
+
+    // Payment method created — in production, send paymentMethod.id to your backend
+    // to create and confirm a PaymentIntent for $9.99/month subscription.
+    console.log('PaymentMethod created:', paymentMethod.id);
+
+    // Show success
+    document.getElementById('stripeForm').style.display = 'none';
+    document.getElementById('stripeSuccess').classList.add('show');
+  }
+
+  function toggleFaq(el) {
+    el.closest('.faq-item').classList.toggle('open');
+  }
+
+  initAuth();
+</script>
+</body>
+</html>
