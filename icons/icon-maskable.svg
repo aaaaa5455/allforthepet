@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full bleed orange background (no rounded corners for maskable) -->
+  <rect width="512" height="512" fill="#e8541e"/>
+  <!-- Paw scaled to safe zone (80% center = 205–307px each axis) -->
+  <ellipse cx="256" cy="312" rx="76" ry="62" fill="white"/>
+  <ellipse cx="168" cy="230" rx="30" ry="37" fill="white"/>
+  <ellipse cx="214" cy="192" rx="28" ry="35" fill="white"/>
+  <ellipse cx="298" cy="192" rx="28" ry="35" fill="white"/>
+  <ellipse cx="344" cy="230" rx="30" ry="37" fill="white"/>
+</svg>
