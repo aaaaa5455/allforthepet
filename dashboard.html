@@ -574,6 +574,88 @@
     .dog-score { margin-left: 0; }
     .metrics-grid { grid-template-columns: 1fr 1fr !important; }
   }
+
+  /* NOTIFICATION BELL */
+  .notif-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 11px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    position: relative;
+    line-height: 1;
+  }
+  .notif-btn:hover { background: var(--surface3); }
+  .notif-btn.enabled { background: var(--orange-dim); border-color: rgba(232,84,30,0.3); }
+  .notif-btn.blocked { opacity: 0.5; cursor: not-allowed; }
+  .notif-badge {
+    position: absolute;
+    top: -5px; right: -5px;
+    background: var(--red);
+    color: #fff;
+    border-radius: 50%;
+    width: 17px; height: 17px;
+    font-size: 10px; font-weight: 700;
+    display: none;
+    align-items: center; justify-content: center;
+    border: 2px solid var(--surface);
+  }
+
+  /* HEALTH ALERTS */
+  #healthAlerts { margin-bottom: 20px; }
+  .health-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+  }
+  .health-alert.danger  { border-color: rgba(248,113,113,0.35); background: rgba(248,113,113,0.04); }
+  .health-alert.warning { border-color: rgba(250,204,21,0.35);  background: rgba(250,204,21,0.03); }
+  .ha-icon { font-size: 26px; flex-shrink: 0; margin-top: 1px; }
+  .ha-body { flex: 1; min-width: 0; }
+  .ha-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+  .health-alert.danger  .ha-title { color: var(--red); }
+  .health-alert.warning .ha-title { color: var(--yellow); }
+  .ha-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+  .ha-action {
+    display: inline-block; margin-top: 10px;
+    font-size: 12px; color: var(--orange); font-weight: 500;
+    cursor: pointer; background: none; border: none;
+    font-family: 'DM Sans', sans-serif; padding: 0;
+    text-decoration: none;
+  }
+  .ha-action:hover { text-decoration: underline; }
+
+  /* Notification permission banner */
+  #notifPermBanner {
+    display: none;
+    align-items: center; gap: 14px;
+    background: var(--surface);
+    border: 1px solid rgba(232,84,30,0.3);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .npb-icon { font-size: 24px; flex-shrink: 0; }
+  .npb-text { flex: 1; font-size: 13px; color: var(--gray); line-height: 1.5; }
+  .npb-text strong { color: var(--white); font-weight: 500; display: block; margin-bottom: 2px; }
+  .npb-btn {
+    background: var(--orange); color: #fff; border: none;
+    border-radius: 8px; padding: 9px 18px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; white-space: nowrap; transition: background 0.2s;
+  }
+  .npb-btn:hover { background: var(--orange-light); }
+  .npb-dismiss {
+    background: none; border: none; color: #444; font-size: 16px;
+    cursor: pointer; padding: 4px; flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -636,11 +718,29 @@
     <div class="topbar-right">
       <div class="topbar-date" id="current-date"></div>
       <div class="badge-online">Monitoring Active</div>
+      <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()" title="Enable health notifications">
+        🔔
+        <span class="notif-badge" id="notifBadge"></span>
+      </button>
     </div>
   </header>
 
   <!-- CONTENT -->
   <div class="content">
+
+    <!-- NOTIFICATION PERMISSION BANNER (shown when permission not yet granted) -->
+    <div id="notifPermBanner">
+      <div class="npb-icon">🔔</div>
+      <div class="npb-text">
+        <strong>Enable Health Alerts</strong>
+        Get notified when we detect abnormal heart rate or low activity in your dog's data.
+      </div>
+      <button class="npb-btn" onclick="requestNotifPermission()">Enable</button>
+      <button class="npb-dismiss" onclick="dismissNotifBanner()" title="Dismiss">✕</button>
+    </div>
+
+    <!-- HEALTH ALERTS (shown when anomalies detected) -->
+    <div id="healthAlerts"></div>
 
     <!-- DOG PROFILE -->
     <div class="dog-profile" id="dogProfileCard">
@@ -980,8 +1080,209 @@
 
   (async () => {
     const user = await initAuth();
-    if (user) _renderDogProfile(user);
+    if (user) {
+      _renderDogProfile(user);
+      _initNotifications(user);
+    }
   })();
+
+  // ── Notification System ─────────────────────────────────────────────────────
+
+  const _HEART_HIGH = 140; // bpm
+  const _HEART_LOW  = 50;  // bpm
+  const _STEPS_LOW  = 1000;
+  const _DAYS_CHECK = 3;
+
+  // Current health readings from the dashboard display
+  function _getLiveMetrics() {
+    return {
+      heartRate: parseInt(document.querySelector('.metric-val')?.nextSibling?.textContent) ||
+                 parseInt(document.querySelectorAll('.metric-val')[1]?.textContent) || 82,
+      steps: 8240, // today's steps (hardcoded demo; replace with real data source)
+    };
+  }
+
+  function _initNotifications(user) {
+    if (!('Notification' in window)) return;
+
+    const { steps } = _getLiveMetrics();
+    _trackDailySteps(steps);
+    _updateNotifBtn();
+
+    // Show permission banner if not yet decided (and not dismissed this session)
+    if (Notification.permission === 'default' && !sessionStorage.getItem('notif-banner-dismissed')) {
+      document.getElementById('notifPermBanner').style.display = 'flex';
+    }
+
+    // If already granted, run health checks immediately
+    if (Notification.permission === 'granted') {
+      const dogName = user?.user_metadata?.dog_name || 'Your dog';
+      _runHealthChecks(dogName);
+    }
+  }
+
+  function _updateNotifBtn() {
+    const btn = document.getElementById('notifBtn');
+    if (!btn) return;
+    const perm = Notification.permission;
+    btn.classList.toggle('enabled', perm === 'granted');
+    btn.classList.toggle('blocked', perm === 'denied');
+    btn.title = perm === 'granted' ? 'Health notifications enabled'
+              : perm === 'denied'  ? 'Notifications blocked — check browser settings'
+              : 'Enable health notifications';
+    btn.querySelector('span') && (btn.firstChild.textContent = perm === 'denied' ? '🔕' : '🔔');
+  }
+
+  async function requestNotifPermission() {
+    if (!('Notification' in window)) {
+      alert('Your browser does not support notifications.');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      alert('Notifications are blocked. Please enable them in your browser or system settings, then reload.');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      // Already granted — just run check
+      const user = await _sb.auth.getUser().then(r => r.data.user);
+      const dogName = user?.user_metadata?.dog_name || 'Your dog';
+      _runHealthChecks(dogName);
+      document.getElementById('notifPermBanner').style.display = 'none';
+      return;
+    }
+    const result = await Notification.requestPermission();
+    _updateNotifBtn();
+    document.getElementById('notifPermBanner').style.display = 'none';
+    if (result === 'granted') {
+      const user = await _sb.auth.getUser().then(r => r.data.user);
+      const dogName = user?.user_metadata?.dog_name || 'Your dog';
+      _sendNotif(
+        '🐾 Health Monitoring Active',
+        `We'll alert you if we detect any abnormal readings for ${dogName}.`,
+        'aftp-welcome'
+      );
+      _runHealthChecks(dogName);
+    }
+  }
+
+  function dismissNotifBanner() {
+    document.getElementById('notifPermBanner').style.display = 'none';
+    sessionStorage.setItem('notif-banner-dismissed', '1');
+  }
+
+  // ── Step tracking (3-day history via localStorage) ──────────────────────────
+  function _trackDailySteps(steps) {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(`aftp-steps-${today}`, String(steps));
+  }
+
+  function _countLowStepDays() {
+    let low = 0;
+    for (let i = 0; i < _DAYS_CHECK; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key   = `aftp-steps-${d.toISOString().slice(0, 10)}`;
+      const saved = localStorage.getItem(key);
+      // Count as low if data exists and is below threshold
+      if (saved !== null && parseInt(saved) < _STEPS_LOW) low++;
+    }
+    return low;
+  }
+
+  // ── Core health check ───────────────────────────────────────────────────────
+  function _runHealthChecks(dogName) {
+    const { heartRate, steps } = _getLiveMetrics();
+    const alerts = [];
+
+    if (heartRate > _HEART_HIGH) {
+      alerts.push({
+        level: 'danger', icon: '❤️‍🔥',
+        title: `High Heart Rate — ${heartRate} bpm`,
+        desc: `${dogName}'s resting heart rate is <strong>${heartRate} bpm</strong>, above the safe range of ${_HEART_LOW}–${_HEART_HIGH} bpm. This may indicate stress, pain, fever, or a cardiac issue. Contact your vet if this reading persists.`,
+        actionText: 'Book vet appointment →', actionHref: 'appointments.html',
+        tag: 'hr-high',
+        notifTitle: `⚠️ High Heart Rate — ${dogName}`,
+        notifBody:  `Heart rate at ${heartRate} bpm (normal: ${_HEART_LOW}–${_HEART_HIGH}). Contact your vet if this persists.`,
+      });
+    } else if (heartRate < _HEART_LOW) {
+      alerts.push({
+        level: 'danger', icon: '💔',
+        title: `Low Heart Rate — ${heartRate} bpm`,
+        desc: `${dogName}'s resting heart rate is <strong>${heartRate} bpm</strong>, below the safe range of ${_HEART_LOW}–${_HEART_HIGH} bpm. Bradycardia in dogs can be serious. Monitor closely and consult your vet soon.`,
+        actionText: 'Book vet appointment →', actionHref: 'appointments.html',
+        tag: 'hr-low',
+        notifTitle: `⚠️ Low Heart Rate — ${dogName}`,
+        notifBody:  `Heart rate at ${heartRate} bpm (normal: ${_HEART_LOW}–${_HEART_HIGH}). Consult your vet soon.`,
+      });
+    }
+
+    const lowDays = _countLowStepDays();
+    if (lowDays >= _DAYS_CHECK) {
+      alerts.push({
+        level: 'warning', icon: '🐾',
+        title: `Low Activity — ${lowDays} Days in a Row`,
+        desc: `${dogName} has had fewer than <strong>${_STEPS_LOW.toLocaleString()} steps</strong> for ${lowDays} consecutive days. Prolonged low activity can indicate lethargy, joint pain, or illness. Consider increasing exercise or scheduling a health check.`,
+        actionText: 'Ask AI advisor →', actionHref: 'chat.html',
+        tag: 'steps-low',
+        notifTitle: `🐾 Low Activity Alert — ${dogName}`,
+        notifBody:  `Fewer than ${_STEPS_LOW} steps/day for ${lowDays} days in a row. A vet check may be needed.`,
+      });
+    }
+
+    _renderHealthAlerts(alerts);
+
+    // Send push notifications (throttled: max once per 6 hours per alert type)
+    alerts.forEach(a => {
+      const lastKey  = `aftp-notif-sent-${a.tag}`;
+      const lastSent = parseInt(localStorage.getItem(lastKey) || '0');
+      if (Date.now() - lastSent > 6 * 3600 * 1000) {
+        _sendNotif(a.notifTitle, a.notifBody, a.tag);
+        localStorage.setItem(lastKey, String(Date.now()));
+      }
+    });
+  }
+
+  function _renderHealthAlerts(alerts) {
+    const container = document.getElementById('healthAlerts');
+    if (!container) return;
+
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+      badge.textContent   = alerts.length;
+      badge.style.display = alerts.length ? 'flex' : 'none';
+    }
+
+    if (!alerts.length) { container.innerHTML = ''; return; }
+
+    container.innerHTML = alerts.map(a => `
+      <div class="health-alert ${a.level}">
+        <div class="ha-icon">${a.icon}</div>
+        <div class="ha-body">
+          <div class="ha-title">${a.title}</div>
+          <div class="ha-desc">${a.desc}</div>
+          <a class="ha-action" href="${a.actionHref}">${a.actionText}</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function _sendNotif(title, body, tag) {
+    if (Notification.permission !== 'granted') return;
+    const opts = {
+      body,
+      icon:  './icons/icon.svg',
+      badge: './icons/icon.svg',
+      tag,
+      renotify: false,
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then(reg => reg.showNotification(title, opts))
+        .catch(() => new Notification(title, opts));
+    } else {
+      new Notification(title, opts);
+    }
+  }
 </script>
 <script src="pwa.js"></script>
 </body>

@@ -1,5 +1,5 @@
 // ── All For The Pet — Service Worker ──────────────────────────────────────────
-const CACHE = 'aftp-v1';
+const CACHE = 'aftp-v2';
 
 const PRECACHE = [
   './',
@@ -88,6 +88,28 @@ self.addEventListener('fetch', event => {
           return caches.match('./dashboard.html');
         }
       });
+    })
+  );
+});
+
+// ── Notification click → open the relevant page ───────────────────────────────
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const tag = event.notification.tag;
+
+  // Map alert tags to destination pages
+  const dest = tag === 'hr-high'    ? './appointments.html'
+             : tag === 'hr-low'     ? './appointments.html'
+             : tag === 'steps-low'  ? './chat.html'
+             : './dashboard.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      // Focus existing tab if already open
+      for (const c of list) {
+        if (c.url.includes(dest.replace('./', '')) && 'focus' in c) return c.focus();
+      }
+      return clients.openWindow(dest);
     })
   );
 });
