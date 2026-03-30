@@ -637,30 +637,37 @@
   <div class="content">
 
     <!-- DOG PROFILE -->
-    <div class="dog-profile">
-      <div class="dog-avatar-lg">🐕</div>
-      <div class="dog-info">
-        <h2>MAX <span>·</span> GOLDEN RETRIEVER</h2>
-        <div class="dog-meta">
-          <div class="dog-meta-item">Age <strong>3 yrs</strong></div>
-          <div class="dog-meta-item">Weight <strong>28 kg</strong></div>
-          <div class="dog-meta-item">Sex <strong>Male (neutered)</strong></div>
-          <div class="dog-meta-item">Chip ID <strong>#4D2A9F3B</strong></div>
-          <div class="dog-meta-item">Last Vet Visit <strong>Dec 2024</strong></div>
-        </div>
-        <div class="dog-tags">
-          <span class="tag orange">ACTIVE</span>
-          <span class="tag green">VACCINATED</span>
-          <span class="tag">No Allergies</span>
-          <span class="tag">Indoor + Outdoor</span>
-        </div>
+    <div class="dog-profile" id="dogProfileCard">
+      <!-- Setup prompt (shown when no dog data) -->
+      <div id="dogSetupPrompt" style="display:none; width:100%; text-align:center; padding:12px 0;">
+        <div style="font-size:40px; margin-bottom:12px;">🐾</div>
+        <div style="font-size:17px; font-weight:500; margin-bottom:6px;">Set up your dog's profile</div>
+        <div style="font-size:13px; color:var(--gray); margin-bottom:18px;">Add your dog's name, breed, age, and weight to personalise your dashboard.</div>
+        <button onclick="openDogProfile()" style="background:var(--orange);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Add Dog Profile</button>
       </div>
-      <div class="dog-score">
-        <div class="score-ring">
-          <div class="score-num">87</div>
-          <div class="score-label">/ 100</div>
+      <!-- Dog data (shown when profile exists) -->
+      <div id="dogDataView" style="display:none; width:100%; align-items:center; gap:28px; flex-wrap:wrap;">
+        <div class="dog-avatar-lg">🐕</div>
+        <div class="dog-info">
+          <h2 id="dogDisplayName" style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;line-height:1;margin-bottom:6px;">—</h2>
+          <div class="dog-meta">
+            <div class="dog-meta-item">Age <strong id="dogDisplayAge">—</strong></div>
+            <div class="dog-meta-item">Weight <strong id="dogDisplayWeight">—</strong></div>
+            <div class="dog-meta-item">Sex <strong id="dogDisplayGender">—</strong></div>
+          </div>
+          <div class="dog-tags" style="margin-top:12px;">
+            <span class="tag orange">ACTIVE</span>
+            <span class="tag green">VACCINATED</span>
+            <button onclick="openDogProfile()" style="font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.06);color:#7a7670;border:1px solid rgba(255,255,255,0.08);cursor:pointer;font-family:'DM Sans',sans-serif;">✏️ Edit</button>
+          </div>
         </div>
-        <div class="score-desc">Health Score</div>
+        <div class="dog-score">
+          <div class="score-ring">
+            <div class="score-num">87</div>
+            <div class="score-label">/ 100</div>
+          </div>
+          <div class="score-desc">Health Score</div>
+        </div>
       </div>
     </div>
 
@@ -938,7 +945,37 @@
     });
   });
 
-  initAuth();
+  function _renderDogProfile(user) {
+    const meta = user?.user_metadata || {};
+    const name    = meta.dog_name   || '';
+    const breed   = meta.dog_breed  || '';
+    const age     = meta.dog_age    || '';
+    const weight  = meta.dog_weight || '';
+    const gender  = meta.dog_gender || '';
+
+    const hasProfile = name || breed;
+    document.getElementById('dogSetupPrompt').style.display = hasProfile ? 'none' : 'block';
+    const dataView = document.getElementById('dogDataView');
+    dataView.style.display = hasProfile ? 'flex' : 'none';
+
+    if (hasProfile) {
+      document.getElementById('dogDisplayName').innerHTML =
+        name && breed
+          ? `${name.toUpperCase()} <span style="color:var(--orange)">·</span> ${breed.toUpperCase()}`
+          : (name.toUpperCase() || breed.toUpperCase());
+      document.getElementById('dogDisplayAge').textContent    = age    ? `${age} yrs`  : '—';
+      document.getElementById('dogDisplayWeight').textContent = weight ? `${weight} kg` : '—';
+      document.getElementById('dogDisplayGender').textContent = gender || '—';
+    }
+  }
+
+  // Hook: re-render dashboard when dog profile is saved from the modal
+  window.onDogProfileSaved = _renderDogProfile;
+
+  (async () => {
+    const user = await initAuth();
+    if (user) _renderDogProfile(user);
+  })();
 </script>
 </body>
 </html>

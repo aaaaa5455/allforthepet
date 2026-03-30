@@ -157,9 +157,21 @@ const _MODAL_HTML = `
         <input class="dp-input" id="dpDogAge" type="number" placeholder="e.g. 3" min="0" max="30">
       </div>
     </div>
-    <div class="dp-field">
-      <label class="dp-label">Weight (kg)</label>
-      <input class="dp-input" id="dpDogWeight" type="number" placeholder="e.g. 28.5" min="0" max="200" step="0.1">
+    <div class="dp-row">
+      <div class="dp-field">
+        <label class="dp-label">Weight (kg)</label>
+        <input class="dp-input" id="dpDogWeight" type="number" placeholder="e.g. 28.5" min="0" max="200" step="0.1">
+      </div>
+      <div class="dp-field">
+        <label class="dp-label">Gender</label>
+        <select class="dp-input" id="dpDogGender">
+          <option value="">— select —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Male (neutered)">Male (neutered)</option>
+          <option value="Female (spayed)">Female (spayed)</option>
+        </select>
+      </div>
     </div>
 
     <div class="dp-error"   id="dpError"></div>
@@ -225,11 +237,12 @@ function closeDogProfile() {
 async function _loadDogProfileForm() {
   const { data: { user } } = await _sb.auth.getUser();
   const meta = user?.user_metadata || {};
-  document.getElementById('dpFullName').value  = meta.full_name  || '';
-  document.getElementById('dpDogName').value   = meta.dog_name   || '';
-  document.getElementById('dpDogBreed').value  = meta.dog_breed  || '';
-  document.getElementById('dpDogAge').value    = meta.dog_age    || '';
-  document.getElementById('dpDogWeight').value = meta.dog_weight || '';
+  document.getElementById('dpFullName').value   = meta.full_name   || '';
+  document.getElementById('dpDogName').value    = meta.dog_name    || '';
+  document.getElementById('dpDogBreed').value   = meta.dog_breed   || '';
+  document.getElementById('dpDogAge').value     = meta.dog_age     || '';
+  document.getElementById('dpDogWeight').value  = meta.dog_weight  || '';
+  document.getElementById('dpDogGender').value  = meta.dog_gender  || '';
 }
 
 async function saveDogProfile() {
@@ -239,6 +252,7 @@ async function saveDogProfile() {
     dog_breed:  document.getElementById('dpDogBreed').value.trim(),
     dog_age:    document.getElementById('dpDogAge').value.trim(),
     dog_weight: document.getElementById('dpDogWeight').value.trim(),
+    dog_gender: document.getElementById('dpDogGender').value,
   };
 
   const btn = document.getElementById('dpSaveBtn');
@@ -262,6 +276,9 @@ async function saveDogProfile() {
   document.getElementById('dpSuccess').style.display = 'block';
   const { data: { user } } = await _sb.auth.getUser();
   _updateSidebarUser(user);
+
+  // Let the current page refresh its dog profile display
+  if (typeof window.onDogProfileSaved === 'function') window.onDogProfileSaved(user);
 
   setTimeout(closeDogProfile, 1200);
 }
