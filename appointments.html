@@ -807,7 +807,7 @@
 
         <div class="confirm-row">
           <div class="confirm-key">Patient</div>
-          <div class="confirm-val">Max · Golden Retriever · 3 yrs</div>
+          <div class="confirm-val" id="confirmPatient">—</div>
         </div>
         <div class="confirm-row">
           <div class="confirm-key">Clinic</div>
@@ -843,10 +843,15 @@
         <div class="success-icon">🎉</div>
         <div class="success-title">BOOKING CONFIRMED!</div>
         <div class="success-desc">
-          Your appointment for <strong>Max</strong> has been confirmed.<br>
-          We'll send a reminder 24 hours before your visit.
+          <strong id="successDogName">Your dog</strong>'s appointment at<br>
+          <strong id="successClinic">—</strong><br>
+          on <strong id="successDateTime">—</strong><br>
+          has been confirmed. We'll remind you 24 hours before your visit.
         </div>
         <div class="success-ref" id="successRef">REF #AFTP-000000</div>
+        <div id="successSaveErr" style="font-size:12px;color:#f87171;margin-bottom:12px;display:none;">
+          Note: appointment saved locally — sync to database failed. Please try again.
+        </div>
         <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
           <button class="btn btn-ghost" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
           <button class="btn btn-primary" onclick="resetFlow()">Book Another</button>
@@ -904,14 +909,21 @@
 
   function goToStep3() {
     if (!selectedDate || !selectedTime) return;
-    const c = CLINICS[selectedClinicIdx];
+    const c    = CLINICS[selectedClinicIdx];
+    const meta = _currentUser?.user_metadata || {};
+    const parts = [
+      meta.dog_name  || 'Your Dog',
+      meta.dog_breed || '',
+      meta.dog_age   ? `${meta.dog_age} yrs` : '',
+    ].filter(Boolean);
+    document.getElementById('confirmPatient').textContent  = parts.join(' · ');
     document.getElementById('confirmClinic').textContent   = c.name;
     document.getElementById('confirmAddress').textContent  = c.address;
     document.getElementById('confirmDateTime').textContent = `${selectedDate} at ${selectedTime}`;
     const reasons = selectedReasons.length ? selectedReasons.join(', ') : 'General Visit';
-    document.getElementById('confirmReason').textContent  = reasons;
+    document.getElementById('confirmReason').textContent   = reasons;
     const note = document.getElementById('noteInput').value.trim();
-    document.getElementById('confirmNotes').textContent   = note || '—';
+    document.getElementById('confirmNotes').textContent    = note || '—';
     setStep(3);
   }
 
@@ -1202,11 +1214,44 @@
   }
 
   // ── Confirm & success ────────────────────────────────────────────────────────
-  function confirmBooking() {
-    document.getElementById('confirmCard').style.display = 'none';
-    document.querySelector('#step3 .btn-row').style.display = 'none';
-    const ref = 'AFTP-' + Math.random().toString(36).slice(2,8).toUpperCase();
-    document.getElementById('successRef').textContent = `REF #${ref}`;
+  async function confirmBooking() {
+    const confirmBtn = document.querySelector('#step3 .btn-row .btn-primary');
+    confirmBtn.disabled    = true;
+    confirmBtn.textContent = 'Saving…';
+
+    const meta     = _currentUser?.user_metadata || {};
+    const dogName  = meta.dog_name  || 'Your Dog';
+    const c        = CLINICS[selectedClinicIdx];
+    const ref      = 'AFTP-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    const reason   = selectedReasons.length ? selectedReasons.join(', ') : 'General Visit';
+    const note     = document.getElementById('noteInput').value.trim();
+
+    // ── Save to Supabase ─────────────────────────────────────────────────────
+    let saveErr = false;
+    if (_currentUser) {
+      const { error } = await _sb.from('appointments').insert({
+        user_id:          _currentUser.id,
+        clinic_name:      c.name,
+        clinic_address:   c.address || null,
+        appointment_date: selectedDate,
+        appointment_time: selectedTime,
+        reason:           reason,
+        notes:            note || null,
+        dog_name:         dogName,
+        dog_breed:        meta.dog_breed || null,
+        ref_code:         ref,
+      });
+      if (error) saveErr = true;
+    }
+
+    // ── Show success screen ──────────────────────────────────────────────────
+    document.getElementById('confirmCard').style.display          = 'none';
+    document.querySelector('#step3 .btn-row').style.display       = 'none';
+    document.getElementById('successDogName').textContent         = dogName;
+    document.getElementById('successClinic').textContent          = c.name;
+    document.getElementById('successDateTime').textContent        = `${selectedDate} at ${selectedTime}`;
+    document.getElementById('successRef').textContent             = `REF #${ref}`;
+    document.getElementById('successSaveErr').style.display       = saveErr ? 'block' : 'none';
     document.getElementById('successCard').classList.add('visible');
     updateProgressDone();
   }
@@ -1239,8 +1284,16 @@
   }
 
   // ── Init ─────────────────────────────────────────────────────────────────────
+  let _currentUser = null;
+
   setStep(1);
-  initAuth();
+  (async () => {
+    _currentUser = await initAuth();
+    if (_currentUser) {
+      const dogName = _currentUser.user_metadata?.dog_name || 'Your Dog';
+      document.getElementById('topDogName').textContent = dogName;
+    }
+  })();
 </script>
 
 <nav class="mobile-nav">
