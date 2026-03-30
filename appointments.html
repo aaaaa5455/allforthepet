@@ -1232,16 +1232,15 @@
       const { error } = await _sb.from('appointments').insert({
         user_id:          _currentUser.id,
         clinic_name:      c.name,
-        clinic_address:   c.address || null,
         appointment_date: selectedDate,
         appointment_time: selectedTime,
-        reason:           reason,
-        notes:            note || null,
         dog_name:         dogName,
-        dog_breed:        meta.dog_breed || null,
-        ref_code:         ref,
+        status:           'confirmed',
       });
-      if (error) saveErr = true;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        saveErr = true;
+      }
     }
 
     // ── Show success screen ──────────────────────────────────────────────────
